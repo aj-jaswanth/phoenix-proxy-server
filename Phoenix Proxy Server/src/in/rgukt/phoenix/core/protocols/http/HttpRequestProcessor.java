@@ -2,7 +2,7 @@ package in.rgukt.phoenix.core.protocols.http;
 
 import in.rgukt.phoenix.core.ByteBuffer;
 import in.rgukt.phoenix.core.Constants;
-import in.rgukt.phoenix.core.protocols.ApplicationLayerProtocolMessage;
+import in.rgukt.phoenix.core.protocols.ApplicationLayerProtocolProcessor;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReader;
 
 import java.io.IOException;
@@ -10,44 +10,44 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 
-public class HttpRequestProcessor extends ApplicationLayerProtocolMessage {
+public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 
 	private ByteBuffer headers;
 	private ByteBuffer body;
-	// private ByteBuffer message;
-	private BufferedStreamReader bufferedReader;
-	private HashMap<String, String> map = new HashMap<String, String>();
+	private BufferedStreamReader bufferedStreamReader;
+	private HashMap<String, String> headersMap = new HashMap<String, String>();
 	private String[] initialLineArray;
 	private String[] serverAddress;
-	private int headerInsertionPoint;
+	private int headersEndingIndex;
 
 	public HttpRequestProcessor(ByteBuffer message,
-			BufferedStreamReader bufferedReader) throws IOException {
+			BufferedStreamReader bufferedStreamReader) throws IOException {
+		super.errorHandler = new HttpErrorHandler();
 		this.headers = message;
 		this.body = new ByteBuffer(Constants.HttpProtocol.requestBodyBufferSize);
-		this.bufferedReader = bufferedReader;
-		readCompleteStream();
+		this.bufferedStreamReader = bufferedStreamReader;
 	}
 
-	private void readCompleteStream() throws IOException {
+	@Override
+	public void processMessage() throws IOException {
 		byte b = 0;
-		int state = HttpRequestStates.initialLine;
-		int p = 0, q = 0, prevQ = 0;
-		boolean noRead = false;
+		int state = HttpRequestStates.initialRequestLine;
+		int headerStart = 0, headerSemiColon = 0, previousHeaderSemiColon = 0;
+		boolean skipRead = false;
 		while (true) {
-			if (noRead == false) {
-				b = bufferedReader.read();
+			if (skipRead == false) {
+				b = bufferedStreamReader.read();
 				if (b == -1)
 					return;
 				headers.put(b);
 			} else
-				noRead = false;
+				skipRead = false;
 			switch (state) {
-			case HttpRequestStates.initialLine:
+			case HttpRequestStates.initialRequestLine:
 				if (b == '\n') {
 					initialLineArray = new String(headers.getBuffer(), 0,
 							headers.getPosition()).trim().split(" ");
-					p = headers.getPosition();
+					headerStart = headers.getPosition();
 					state = HttpRequestStates.headerLine;
 					break;
 				}
@@ -55,34 +55,37 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolMessage {
 			case HttpRequestStates.headerLine:
 				if (b == '\n') {
 					state = HttpRequestStates.headerLineEnd;
-					noRead = true;
+					skipRead = true;
 					break;
 				}
-				if (b == ':' && q == prevQ)
-					q = headers.getPosition() - 1;
+				if (b == ':' && headerSemiColon == previousHeaderSemiColon)
+					headerSemiColon = headers.getPosition() - 1;
 				break;
 			case HttpRequestStates.headerLineEnd:
 				byte[] temp = headers.getBuffer();
-				if (prevQ == q) {
-					state = HttpRequestStates.headerSectionEnd;
-					noRead = true;
+				if (previousHeaderSemiColon == headerSemiColon) {
+					state = HttpRequestStates.headersSectionEnd;
+					skipRead = true;
 					int pos = headers.getPosition();
 					if (headers.get(pos - 2) == '\r')
-						headerInsertionPoint = pos - 2;
+						headersEndingIndex = pos - 2;
 					else
-						headerInsertionPoint = pos - 1;
+						headersEndingIndex = pos - 1;
 					break;
 				}
-				map.put(new String(temp, p, q - p).trim(), new String(temp,
-						q + 1, headers.getPosition() - q - 1).trim());
+				headersMap.put(new String(temp, headerStart, headerSemiColon
+						- headerStart).trim(), new String(temp,
+						headerSemiColon + 1, headers.getPosition()
+								- headerSemiColon - 1).trim());
 				state = HttpRequestStates.headerLine;
-				p = headers.getPosition();
-				prevQ = q;
+				headerStart = headers.getPosition();
+				previousHeaderSemiColon = headerSemiColon;
 				break;
-			case HttpRequestStates.headerSectionEnd:
+			case HttpRequestStates.headersSectionEnd:
 				if (initialLineArray[0].equals("POST")) {
-					int len = Integer.parseInt(map.get("Content-Length"));
-					body.put(bufferedReader.read(len));
+					int len = Integer
+							.parseInt(headersMap.get("Content-Length"));
+					body.put(bufferedStreamReader.read(len));
 				}
 				return;
 			}
@@ -91,7 +94,7 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolMessage {
 
 	@Override
 	public String getValue(String headerKey) {
-		return map.get(headerKey);
+		return headersMap.get(headerKey);
 	}
 
 	@Override
@@ -107,24 +110,24 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolMessage {
 	@Override
 	public String getServer() {
 		if (serverAddress == null)
-			serverAddress = map.get("Host").split(":");
+			serverAddress = headersMap.get("Host").split(":");
 		return serverAddress[0];
 	}
 
 	@Override
 	public int getPort() {
 		if (serverAddress == null)
-			serverAddress = map.get("Host").split(":");
+			serverAddress = headersMap.get("Host").split(":");
 		if (serverAddress.length == 1)
 			return 80;
 		return Integer.parseInt(serverAddress[1]);
 	}
 
 	@Override
-	public ApplicationLayerProtocolMessage getComplementaryProcessor(
+	public ApplicationLayerProtocolProcessor getComplementaryProcessor(
 			InputStream inputStream) throws IOException {
 		return new HttpResponseProcessor(new ByteBuffer(
-				Constants.HttpProtocol.responseHeaderBufferSize),
+				Constants.HttpProtocol.responseHeadersBufferSize),
 				new BufferedStreamReader(inputStream,
 						Constants.HttpProtocol.streamBufferSize));
 	}
@@ -134,8 +137,8 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolMessage {
 		return initialLineArray[1];
 	}
 
-	public int getInsertionPoint() {
-		return headerInsertionPoint;
+	public int getHeadersEndingIndex() {
+		return headersEndingIndex;
 	}
 
 	@Override
@@ -148,12 +151,12 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolMessage {
 
 	@Override
 	public boolean isAuthorized(OutputStream outputStream) throws IOException {
-		String headerValue = map.get("Proxy-Authorization");
+		String authorizationHeaderValue = headersMap.get("Proxy-Authorization");
 		// TODO: Check whether proper credentials or not.
-		if (headerValue != null) {
+		if (authorizationHeaderValue != null) {
 			return true;
 		}
-		HttpHeader authorizationHeaders = new HttpHeader(
+		HttpHeadersBuilder authorizationHeaders = new HttpHeadersBuilder(
 				Constants.HttpProtocol.defaultAuthenticationHeaders);
 		outputStream.write(authorizationHeaders.getByteArray());
 		return false;

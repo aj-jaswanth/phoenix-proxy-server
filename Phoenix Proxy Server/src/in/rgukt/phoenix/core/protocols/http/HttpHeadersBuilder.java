@@ -3,13 +3,13 @@ package in.rgukt.phoenix.core.protocols.http;
 import in.rgukt.phoenix.core.ByteBuffer;
 import in.rgukt.phoenix.core.Constants;
 
-public class HttpHeader {
+public class HttpHeadersBuilder {
 	private ByteBuffer headerBuffer;
 	private byte[] delimiter = "\r\n".getBytes();
 
-	public HttpHeader(String[] headers) {
+	public HttpHeadersBuilder(String[] headers) {
 		headerBuffer = new ByteBuffer(
-				Constants.HttpProtocol.requestHeaderBufferSize);
+				Constants.HttpProtocol.requestHeadersBufferSize);
 		for (String header : headers) {
 			headerBuffer.put(header.getBytes());
 			headerBuffer.put(delimiter);

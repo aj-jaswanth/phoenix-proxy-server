@@ -11,10 +11,10 @@ public class BufferedStreamReader {
 	private int limit = 0;
 	private int capacity;
 
-	public BufferedStreamReader(InputStream inputStream, int bufferLength) {
+	public BufferedStreamReader(InputStream inputStream, int bufferSize) {
 		this.inputStream = inputStream;
-		this.buffer = new byte[bufferLength];
-		this.capacity = bufferLength;
+		this.buffer = new byte[bufferSize];
+		this.capacity = bufferSize;
 	}
 
 	public byte read() throws IOException {
@@ -30,26 +30,26 @@ public class BufferedStreamReader {
 	public byte[] read(int length) throws IOException {
 		byte[] array = new byte[length];
 		if (position < limit) {
-			int rem = limit - position;
-			if (length >= rem) {
-				System.arraycopy(buffer, position, array, 0, rem);
-				length -= rem;
+			int remainder = limit - position;
+			if (length >= remainder) {
+				System.arraycopy(buffer, position, array, 0, remainder);
+				length -= remainder;
 				position = limit;
-				readIterative(array, rem, length);
+				readIteratively(array, remainder, length);
 			} else {
 				System.arraycopy(buffer, position, array, 0, length);
 				position += length;
 			}
 		} else
-			readIterative(array, 0, length);
+			readIteratively(array, 0, length);
 		return array;
 	}
 
-	public void readIterative(byte[] array, int offset, int length)
+	public void readIteratively(byte[] array, int offset, int length)
 			throws IOException {
-		int readData = 0;
-		while (readData < length)
-			readData += inputStream.read(array, offset + readData, length
-					- readData);
+		int bytesRead = 0;
+		while (bytesRead < length)
+			bytesRead += inputStream.read(array, offset + bytesRead, length
+					- bytesRead);
 	}
 }

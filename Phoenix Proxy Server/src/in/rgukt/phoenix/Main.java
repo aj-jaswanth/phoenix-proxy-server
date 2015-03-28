@@ -17,21 +17,21 @@ public class Main {
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException, ExecutionException {
-		ServerSocket proxyServerSocket = new ServerSocket(Constants.Server.port);
-		initializeProxyServer();
-		ThreadPoolExecutor tp = new ThreadPoolExecutor(6, 100, 3,
-				TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+		ServerSocket serverSocket = new ServerSocket(Constants.Server.port);
+		initialize();
+		ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(6, 100,
+				3, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 		while (!stopServer) {
-			Socket client = proxyServerSocket.accept();
-			tp.execute(new ServerThread(client));
+			Socket client = serverSocket.accept();
+			threadPoolExecutor.execute(new ServerThread(client));
 		}
-		proxyServerSocket.close();
+		serverSocket.close();
 	}
 
-	private static void initializeProxyServer() throws IOException {
-		Constants.ErrorResponses.invalidProtocol = FileHandler
-				.readBytes("/home/aj/git_repos/ProxyServer/Phoenix Proxy Server/src/html/InvalidProtocol.html");
-		Constants.ErrorResponses.proxyServerHomePage = FileHandler
-				.readBytes("/home/aj/git_repos/ProxyServer/Phoenix Proxy Server/src/html/HomePage.html");
+	private static void initialize() throws IOException {
+		Constants.HttpProtocol.ErrorResponses.invalidProtocolHtml = FileHandler
+				.readAsBytes("/home/aj/git_repos/ProxyServer/Phoenix Proxy Server/src/html/InvalidProtocol.html");
+		Constants.HttpProtocol.ErrorResponses.homePageHtml = FileHandler
+				.readAsBytes("/home/aj/git_repos/ProxyServer/Phoenix Proxy Server/src/html/HomePage.html");
 	}
 }

@@ -2,7 +2,7 @@ package in.rgukt.phoenix.core.protocols.http;
 
 import in.rgukt.phoenix.core.ByteBuffer;
 import in.rgukt.phoenix.core.Constants;
-import in.rgukt.phoenix.core.protocols.ApplicationLayerProtocolMessage;
+import in.rgukt.phoenix.core.protocols.ApplicationLayerProtocolProcessor;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReader;
 
 import java.io.IOException;
@@ -10,42 +10,42 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 
-public class HttpResponseProcessor extends ApplicationLayerProtocolMessage {
+public class HttpResponseProcessor extends ApplicationLayerProtocolProcessor {
 	private ByteBuffer headers;
 	private ByteBuffer body;
-	private BufferedStreamReader bufferedReader;
-	private HashMap<String, String> map = new HashMap<String, String>();
+	private BufferedStreamReader bufferedStreamReader;
+	private HashMap<String, String> headersMap = new HashMap<String, String>();
 	private String[] initialLineArray;
-	private int headerInsertionPoint;
+	private int headersEndingIndex;
 
 	public HttpResponseProcessor(ByteBuffer message,
-			BufferedStreamReader bufferedReader) throws IOException {
+			BufferedStreamReader bufferedStreamReader) throws IOException {
 		this.headers = message;
 		this.body = new ByteBuffer(
 				Constants.HttpProtocol.responseBodyBufferSize);
-		this.bufferedReader = bufferedReader;
-		readCompleteStream();
+		this.bufferedStreamReader = bufferedStreamReader;
 	}
 
-	private void readCompleteStream() throws IOException {
+	@Override
+	public void processMessage() throws IOException {
 		byte b = 0;
 		int state = HttpResponseStates.initialLine;
-		int p = 0, q = 0, prevQ = 0;
-		boolean noRead = false;
+		int headerStart = 0, headerSemiColon = 0, previousHeaderSemiColon = 0;
+		boolean skipRead = false;
 		while (true) {
-			if (noRead == false) {
-				b = bufferedReader.read();
+			if (skipRead == false) {
+				b = bufferedStreamReader.read();
 				if (b == -1)
 					return;
 				headers.put(b);
 			} else
-				noRead = false;
+				skipRead = false;
 			switch (state) {
 			case HttpResponseStates.initialLine:
 				if (b == '\n') {
 					initialLineArray = new String(headers.getBuffer(), 0,
 							headers.getPosition()).trim().split(" ");
-					p = headers.getPosition();
+					headerStart = headers.getPosition();
 					state = HttpResponseStates.headerLine;
 					break;
 				}
@@ -53,40 +53,44 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolMessage {
 			case HttpResponseStates.headerLine:
 				if (b == '\n') {
 					state = HttpResponseStates.headerLineEnd;
-					noRead = true;
+					skipRead = true;
 					break;
 				}
-				if (b == ':' && q == prevQ)
-					q = headers.getPosition() - 1;
+				if (b == ':' && headerSemiColon == previousHeaderSemiColon)
+					headerSemiColon = headers.getPosition() - 1;
 				break;
 			case HttpResponseStates.headerLineEnd:
 				byte[] temp = headers.getBuffer();
-				if (prevQ == q) {
-					state = HttpResponseStates.headerSectionEnd;
-					noRead = true;
+				if (previousHeaderSemiColon == headerSemiColon) {
+					state = HttpResponseStates.headersSectionEnd;
+					skipRead = true;
 					int pos = headers.getPosition();
 					if (headers.get(pos - 2) == '\r')
-						headerInsertionPoint = pos - 2;
+						headersEndingIndex = pos - 2;
 					else
-						headerInsertionPoint = pos - 1;
+						headersEndingIndex = pos - 1;
 					break;
 				}
-				map.put(new String(temp, p, q - p).trim(), new String(temp,
-						q + 1, headers.getPosition() - q - 1).trim());
+				headersMap.put(new String(temp, headerStart, headerSemiColon
+						- headerStart).trim(), new String(temp,
+						headerSemiColon + 1, headers.getPosition()
+								- headerSemiColon - 1).trim());
 				state = HttpResponseStates.headerLine;
-				p = headers.getPosition();
-				prevQ = q;
+				headerStart = headers.getPosition();
+				previousHeaderSemiColon = headerSemiColon;
 				break;
-			case HttpResponseStates.headerSectionEnd:
-				String len = map.get("Content-Length");
-				if (len == null) {
-					String encoding = map.get("Transfer-Encoding");
-					if (encoding != null && encoding.equals("chunked")) {
-						readChunkedData(bufferedReader);
+			case HttpResponseStates.headersSectionEnd:
+				String lengthHeaderValue = headersMap.get("Content-Length");
+				if (lengthHeaderValue == null) {
+					String encodingHeaderValue = headersMap
+							.get("Transfer-Encoding");
+					if (encodingHeaderValue != null
+							&& encodingHeaderValue.equals("chunked")) {
+						readChunkedData(bufferedStreamReader);
 					}
 				} else {
-					int l = Integer.parseInt(len);
-					body.put(bufferedReader.read(l));
+					int len = Integer.parseInt(lengthHeaderValue);
+					body.put(bufferedStreamReader.read(len));
 				}
 				return;
 			}
@@ -97,21 +101,21 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolMessage {
 			throws IOException {
 		int state = HttpResponseStates.lengthLine, counter = 0;
 		StringBuilder length = new StringBuilder();
-		boolean noRead = false, semicolonFound = false;
+		boolean skipRead = false, semicolonFound = false;
 		byte b = 0;
 		while (true) {
-			if (noRead == false) {
+			if (skipRead == false) {
 				b = bufferedReader.read();
 				if (b == -1)
 					return;
 				body.put(b);
 			} else
-				noRead = true;
+				skipRead = true;
 			switch (state) {
 			case HttpResponseStates.lengthLine:
 				if (b == '\n') {
 					state = HttpResponseStates.lengthLineEnd;
-					noRead = true;
+					skipRead = true;
 					semicolonFound = false;
 					break;
 				} else if (semicolonFound)
@@ -140,7 +144,7 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolMessage {
 						break;
 				}
 				state = HttpResponseStates.lengthLine;
-				noRead = false;
+				skipRead = false;
 				break;
 			case HttpResponseStates.readRemainingData:
 				if (b == '\n') {
@@ -156,7 +160,7 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolMessage {
 
 	@Override
 	public String getValue(String headerKey) {
-		return map.get(headerKey);
+		return headersMap.get(headerKey);
 	}
 
 	@Override
@@ -182,10 +186,10 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolMessage {
 	}
 
 	@Override
-	public ApplicationLayerProtocolMessage getComplementaryProcessor(
+	public ApplicationLayerProtocolProcessor getComplementaryProcessor(
 			InputStream inputStream) throws IOException {
 		return new HttpRequestProcessor(new ByteBuffer(
-				Constants.HttpProtocol.requestHeaderBufferSize),
+				Constants.HttpProtocol.requestHeadersBufferSize),
 				new BufferedStreamReader(inputStream,
 						Constants.HttpProtocol.streamBufferSize));
 	}
@@ -196,8 +200,8 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolMessage {
 		return null;
 	}
 
-	public int getInsertionPoint() {
-		return headerInsertionPoint;
+	public int getHeadersEndingIndex() {
+		return headersEndingIndex;
 	}
 
 	@Override

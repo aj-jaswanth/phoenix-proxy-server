@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public abstract class ApplicationLayerProtocolMessage {
+public abstract class ApplicationLayerProtocolProcessor {
+
+	public ErrorHandler errorHandler;
 
 	public abstract String getServer();
 
@@ -16,7 +18,9 @@ public abstract class ApplicationLayerProtocolMessage {
 
 	public abstract String getName();
 
-	public abstract ApplicationLayerProtocolMessage getComplementaryProcessor(
+	public abstract void processMessage() throws IOException;
+
+	public abstract ApplicationLayerProtocolProcessor getComplementaryProcessor(
 			InputStream inputStream) throws IOException;
 
 	public abstract String getResource();

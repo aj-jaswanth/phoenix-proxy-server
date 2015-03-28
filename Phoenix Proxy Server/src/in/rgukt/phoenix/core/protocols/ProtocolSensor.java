@@ -9,15 +9,15 @@ import java.io.InputStream;
 
 public class ProtocolSensor {
 
-	public static ApplicationLayerProtocolMessage sense(InputStream inputStream)
-			throws IOException {
+	public static ApplicationLayerProtocolProcessor sense(
+			InputStream inputStream) throws IOException {
 		ByteBuffer message = new ByteBuffer(
-				Constants.HttpProtocol.requestHeaderBufferSize);
-		BufferedStreamReader bufferedReader = new BufferedStreamReader(
+				Constants.HttpProtocol.requestHeadersBufferSize);
+		BufferedStreamReader bufferedStreamReader = new BufferedStreamReader(
 				inputStream, Constants.HttpProtocol.streamBufferSize);
-		int state = 0;
-		for (int x = 0; x < message.getCapacity(); x++) {
-			byte b = bufferedReader.read();
+		int state = 0, capacity = message.getCapacity();
+		for (int x = 0; x < capacity; x++) {
+			byte b = bufferedStreamReader.read();
 			if (b == -1)
 				break;
 			message.put(b);
@@ -32,9 +32,9 @@ public class ProtocolSensor {
 				break;
 			case 1:
 				if (b == 'E' || b == 'O' || b == 'P' || b == 'E' || b == 'R')
-					return new HttpRequestProcessor(message, bufferedReader);
+					return new HttpRequestProcessor(message,
+							bufferedStreamReader);
 				break;
-
 			}
 		}
 		return null;

@@ -8,10 +8,10 @@ public class ByteBuffer {
 	private int position;
 	private int capacity;
 
-	public ByteBuffer(int initialBufferSize) {
-		buffer = new byte[initialBufferSize];
+	public ByteBuffer(int initialSize) {
+		buffer = new byte[initialSize];
 		position = 0;
-		capacity = initialBufferSize;
+		capacity = initialSize;
 	}
 
 	public void put(byte b) {

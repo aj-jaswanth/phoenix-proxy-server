@@ -4,8 +4,8 @@ import java.io.FileReader;
 import java.io.IOException;
 
 public class FileHandler {
-	public static byte[] readBytes(String location) throws IOException {
-		FileReader fileReader = new FileReader(location);
+	public static byte[] readAsBytes(String fileLocation) throws IOException {
+		FileReader fileReader = new FileReader(fileLocation);
 		ByteBuffer buffer = new ByteBuffer(1024);
 		int b = 0;
 		while ((b = fileReader.read()) != -1)
