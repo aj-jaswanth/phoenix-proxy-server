@@ -16,27 +16,30 @@ public class ByteBuffer {
 
 	public void put(byte b) {
 		if (position == capacity)
-			enlargeBuffer();
+			expandBuffer();
 		buffer[position++] = b;
 	}
 
 	public void put(byte[] array) {
-		while ((capacity - position) < array.length)
-			capacity *= 2;
-		byte[] a = new byte[capacity];
-		System.arraycopy(buffer, 0, a, 0, position);
-		System.arraycopy(array, 0, a, position, array.length);
-		buffer = a;
+		if (capacity - position < array.length) {
+			while ((capacity - position) < array.length)
+				capacity *= 2;
+			buffer = Arrays.copyOf(buffer, capacity);
+		}
+		System.arraycopy(array, 0, buffer, position, array.length);
 		position += array.length;
 	}
 
-	private void enlargeBuffer() {
+	private void expandBuffer() {
 		capacity *= 2;
 		buffer = Arrays.copyOf(buffer, capacity);
 	}
 
 	public void trim() {
-		buffer = Arrays.copyOf(buffer, position);
+		if (position < capacity) {
+			buffer = Arrays.copyOf(buffer, position);
+			capacity = position;
+		}
 	}
 
 	public byte get(int index) {

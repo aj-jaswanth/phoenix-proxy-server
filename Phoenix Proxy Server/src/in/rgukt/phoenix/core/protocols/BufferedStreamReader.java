@@ -45,13 +45,11 @@ public class BufferedStreamReader {
 		return array;
 	}
 
-	public byte[] readIterative(byte[] array, int offset, int length)
+	public void readIterative(byte[] array, int offset, int length)
 			throws IOException {
-		int num = 0;
-		while ((num += inputStream.read(array, offset, length)) < length) {
-			offset += num;
-			length -= num;
-		}
-		return array;
+		int readData = 0;
+		while (readData < length)
+			readData += inputStream.read(array, offset + readData, length
+					- readData);
 	}
 }

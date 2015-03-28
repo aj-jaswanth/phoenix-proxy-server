@@ -10,23 +10,26 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 
-public class HttpProtocolRequest extends ApplicationLayerProtocolMessage {
+public class HttpRequestProcessor extends ApplicationLayerProtocolMessage {
 
-	private ByteBuffer message;
+	private ByteBuffer headers;
+	private ByteBuffer body;
+	// private ByteBuffer message;
 	private BufferedStreamReader bufferedReader;
 	private HashMap<String, String> map = new HashMap<String, String>();
 	private String[] initialLineArray;
 	private String[] serverAddress;
 	private int headerInsertionPoint;
 
-	public HttpProtocolRequest(ByteBuffer message,
+	public HttpRequestProcessor(ByteBuffer message,
 			BufferedStreamReader bufferedReader) throws IOException {
-		this.message = message;
+		this.headers = message;
+		this.body = new ByteBuffer(Constants.HttpProtocol.requestBodyBufferSize);
 		this.bufferedReader = bufferedReader;
-		processCompleteStream();
+		readCompleteStream();
 	}
 
-	private void processCompleteStream() throws IOException {
+	private void readCompleteStream() throws IOException {
 		byte b = 0;
 		int state = HttpRequestStates.initialLine;
 		int p = 0, q = 0, prevQ = 0;
@@ -36,15 +39,15 @@ public class HttpProtocolRequest extends ApplicationLayerProtocolMessage {
 				b = bufferedReader.read();
 				if (b == -1)
 					return;
-				message.put(b);
+				headers.put(b);
 			} else
 				noRead = false;
 			switch (state) {
 			case HttpRequestStates.initialLine:
 				if (b == '\n') {
-					initialLineArray = new String(message.getBuffer(), 0,
-							message.getPosition()).trim().split(" ");
-					p = message.getPosition();
+					initialLineArray = new String(headers.getBuffer(), 0,
+							headers.getPosition()).trim().split(" ");
+					p = headers.getPosition();
 					state = HttpRequestStates.headerLine;
 					break;
 				}
@@ -56,31 +59,30 @@ public class HttpProtocolRequest extends ApplicationLayerProtocolMessage {
 					break;
 				}
 				if (b == ':' && q == prevQ)
-					q = message.getPosition() - 1;
+					q = headers.getPosition() - 1;
 				break;
 			case HttpRequestStates.headerLineEnd:
-				byte[] temp = message.getBuffer();
+				byte[] temp = headers.getBuffer();
 				if (prevQ == q) {
 					state = HttpRequestStates.headerSectionEnd;
 					noRead = true;
-					int pos = message.getPosition();
-					if (message.get(pos - 2) == '\r')
+					int pos = headers.getPosition();
+					if (headers.get(pos - 2) == '\r')
 						headerInsertionPoint = pos - 2;
 					else
 						headerInsertionPoint = pos - 1;
 					break;
 				}
 				map.put(new String(temp, p, q - p).trim(), new String(temp,
-						q + 1, message.getPosition() - q - 1).trim());
+						q + 1, headers.getPosition() - q - 1).trim());
 				state = HttpRequestStates.headerLine;
-				p = message.getPosition();
+				p = headers.getPosition();
 				prevQ = q;
 				break;
 			case HttpRequestStates.headerSectionEnd:
 				if (initialLineArray[0].equals("POST")) {
 					int len = Integer.parseInt(map.get("Content-Length"));
-					for (int x = 0; x < len; x++)
-						message.put(bufferedReader.read());
+					body.put(bufferedReader.read(len));
 				}
 				return;
 			}
@@ -103,11 +105,6 @@ public class HttpProtocolRequest extends ApplicationLayerProtocolMessage {
 	}
 
 	@Override
-	public ByteBuffer getMessage() {
-		return message;
-	}
-
-	@Override
 	public String getServer() {
 		if (serverAddress == null)
 			serverAddress = map.get("Host").split(":");
@@ -124,12 +121,12 @@ public class HttpProtocolRequest extends ApplicationLayerProtocolMessage {
 	}
 
 	@Override
-	public ApplicationLayerProtocolMessage getComplementaryObject(
+	public ApplicationLayerProtocolMessage getComplementaryProcessor(
 			InputStream inputStream) throws IOException {
-		return new HttpProtocolResponse(new ByteBuffer(
-				Constants.HttpProtocol.responseBufferSize),
+		return new HttpResponseProcessor(new ByteBuffer(
+				Constants.HttpProtocol.responseHeaderBufferSize),
 				new BufferedStreamReader(inputStream,
-						Constants.HttpProtocol.responseBufferSize));
+						Constants.HttpProtocol.streamBufferSize));
 	}
 
 	@Override
@@ -142,8 +139,23 @@ public class HttpProtocolRequest extends ApplicationLayerProtocolMessage {
 	}
 
 	@Override
-	public void sendMessageToServer(OutputStream outputStream) {
-		// TODO Auto-generated method stub
+	public void sendMessage(OutputStream outputStream) throws IOException {
+		// TODO: Remove Proxy headers
 
+		outputStream.write(headers.getBuffer(), 0, headers.getPosition());
+		outputStream.write(body.getBuffer(), 0, body.getPosition());
+	}
+
+	@Override
+	public boolean isAuthorized(OutputStream outputStream) throws IOException {
+		String headerValue = map.get("Proxy-Authorization");
+		// TODO: Check whether proper credentials or not.
+		if (headerValue != null) {
+			return true;
+		}
+		HttpHeader authorizationHeaders = new HttpHeader(
+				Constants.HttpProtocol.defaultAuthenticationHeaders);
+		outputStream.write(authorizationHeaders.getByteArray());
+		return false;
 	}
 }

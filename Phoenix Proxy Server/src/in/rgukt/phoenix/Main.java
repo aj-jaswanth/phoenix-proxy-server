@@ -30,8 +30,8 @@ public class Main {
 
 	private static void initializeProxyServer() throws IOException {
 		Constants.ErrorResponses.invalidProtocol = FileHandler
-				.readBytes("/home/aj/eclipse_jee/Phoenix Proxy Server/src/html/InvalidProtocol.html");
+				.readBytes("/home/aj/git_repos/ProxyServer/Phoenix Proxy Server/src/html/InvalidProtocol.html");
 		Constants.ErrorResponses.proxyServerHomePage = FileHandler
-				.readBytes("/home/aj/eclipse_jee/Phoenix Proxy Server/src/html/HomePage.html");
+				.readBytes("/home/aj/git_repos/ProxyServer/Phoenix Proxy Server/src/html/HomePage.html");
 	}
 }

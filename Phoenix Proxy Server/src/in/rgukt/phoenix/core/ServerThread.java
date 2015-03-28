@@ -41,8 +41,6 @@ public class ServerThread implements Runnable {
 								.sendInvalidProtocolError(clientOutputStream);
 					return;
 				}
-				System.out.println(Thread.currentThread().getName() + " "
-						+ applicationLayerRequest.getResource());
 
 				// Defense against denial-of-service class attack.
 				// Otherwise proxy server recursively connects to itself
@@ -53,28 +51,28 @@ public class ServerThread implements Runnable {
 					return;
 				}
 
+				System.out.println(Thread.currentThread().getName() + " "
+						+ applicationLayerRequest.getResource());
+
+				// if (applicationLayerRequest.isAuthorized(clientOutputStream)
+				// == false)
+				// return;
 				if (connectToServer(applicationLayerRequest.getServer(),
 						applicationLayerRequest.getPort()) == false)
 					return;
-				// TODO: Remove Proxy headers
-				// TODO: Header injection for authorization
-				applicationLayerRequest.sendMessageToServer(serverOutputStream);
-				// serverOutputStream.write(applicationLayerRequest.getMessage()
-				// .getBuffer(), 0, applicationLayerRequest.getMessage()
-				// .getPosition());
+
+				applicationLayerRequest.sendMessage(serverOutputStream);
 
 				applicationLayerResponse = applicationLayerRequest
-						.getComplementaryObject(serverInputStream);
+						.getComplementaryProcessor(serverInputStream);
 
-				// clientOutputStream.write(applicationLayerResponse.getMessage()
-				// .getBuffer(), 0, applicationLayerResponse.getMessage()
-				// .getPosition());
+				applicationLayerResponse.sendMessage(clientOutputStream);
 
-				if (applicationLayerResponse.getValue("Connection").equals(
-						"close")
-						|| applicationLayerRequest.getValue("Connection")
-								.equals("close"))
-					return;
+				// if (applicationLayerResponse.getValue("Connection").equals(
+				// "close")
+				// || applicationLayerRequest.getValue("Connection")
+				// .equals("close"))
+				// return;
 				return; // TODO: Prevent CPU hog. Pipelining avoided.
 			}
 		} catch (IOException e) {
