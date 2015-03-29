@@ -4,6 +4,7 @@ public class Constants {
 	public static class Server {
 		public static String name = "Phoenix Proxy Server";
 		public static int port = 3128;
+		public static long credentialsttl = 2 * 60 * 60 * 1000;
 	}
 
 	public static class HttpProtocol {
@@ -24,7 +25,8 @@ public class Constants {
 				"HTTP/1.1 200 OK", "Server: " + Constants.Server.name,
 				"Content-Type: text/html", "Proxy-Connection: keep-alive" };
 		public static final String[] defaultAuthenticationHeaders = new String[] {
-				"HTTP/1.1 401 Unauthorized", "Content-Type: text/html",
+				"HTTP/1.1 407 Proxy Authentication Required",
+				"Server: " + Constants.Server.name, "Content-Type: text/html",
 				"Proxy-Connection: keep-alive",
 				"Proxy-Authenticate: Basic realm=\"Phoenix Proxy Server\"" };
 	}

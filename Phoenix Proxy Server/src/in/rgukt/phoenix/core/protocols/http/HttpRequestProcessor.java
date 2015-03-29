@@ -2,6 +2,7 @@ package in.rgukt.phoenix.core.protocols.http;
 
 import in.rgukt.phoenix.core.ByteBuffer;
 import in.rgukt.phoenix.core.Constants;
+import in.rgukt.phoenix.core.authentication.Authenticator;
 import in.rgukt.phoenix.core.protocols.ApplicationLayerProtocolProcessor;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReader;
 
@@ -153,7 +154,8 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 	public boolean isAuthorized(OutputStream outputStream) throws IOException {
 		String authorizationHeaderValue = headersMap.get("Proxy-Authorization");
 		// TODO: Check whether proper credentials or not.
-		if (authorizationHeaderValue != null) {
+		if (authorizationHeaderValue != null
+				&& Authenticator.isValid(authorizationHeaderValue)) {
 			return true;
 		}
 		HttpHeadersBuilder authorizationHeaders = new HttpHeadersBuilder(

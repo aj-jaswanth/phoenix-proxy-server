@@ -30,8 +30,8 @@ public class Main {
 
 	private static void initialize() throws IOException {
 		Constants.HttpProtocol.ErrorResponses.invalidProtocolHtml = FileHandler
-				.readAsBytes("/home/aj/git_repos/ProxyServer/Phoenix Proxy Server/src/html/InvalidProtocol.html");
+				.readAsBytes("html/InvalidProtocol.html");
 		Constants.HttpProtocol.ErrorResponses.homePageHtml = FileHandler
-				.readAsBytes("/home/aj/git_repos/ProxyServer/Phoenix Proxy Server/src/html/HomePage.html");
+				.readAsBytes("html/HomePage.html");
 	}
 }

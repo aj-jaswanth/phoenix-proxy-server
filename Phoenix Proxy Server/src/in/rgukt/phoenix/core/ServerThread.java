@@ -51,9 +51,10 @@ public class ServerThread implements Runnable {
 				System.out.println(Thread.currentThread().getName() + " "
 						+ applicationLayerRequestProcessor.getResource());
 
-				// if (applicationLayerRequest.isAuthorized(clientOutputStream)
-				// == false)
-				// return;
+				if (applicationLayerRequestProcessor
+						.isAuthorized(clientOutputStream) == false)
+					return;
+
 				if (connectToServer(
 						applicationLayerRequestProcessor.getServer(),
 						applicationLayerRequestProcessor.getPort()) == false)
