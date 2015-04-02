@@ -5,32 +5,43 @@ import in.rgukt.phoenix.core.Constants;
 import in.rgukt.phoenix.core.authentication.Authenticator;
 import in.rgukt.phoenix.core.protocols.ApplicationLayerProtocolProcessor;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReader;
+import in.rgukt.phoenix.core.protocols.BufferedStreamReaderWriter;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 
 public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 
+	private Socket clientSocket;
+	private Socket serverSocket;
+	private OutputStream clientOutputStream;
+	private OutputStream serverOutputStream;
 	private ByteBuffer headers;
 	private ByteBuffer body;
 	private BufferedStreamReader bufferedStreamReader;
 	private HashMap<String, String> headersMap = new HashMap<String, String>();
 	private String[] initialLineArray;
+	private String initialLine;
 	private String[] serverAddress;
 	private int headersEndingIndex;
+	private HttpHeadersBuilder authorizationHeaders = new HttpHeadersBuilder(
+			Constants.HttpProtocol.defaultAuthenticationHeaders);
+	private HttpErrorHandler httpErrorHandler = new HttpErrorHandler();
 
-	public HttpRequestProcessor(ByteBuffer message,
+	public HttpRequestProcessor(Socket clientSocket, ByteBuffer message,
 			BufferedStreamReader bufferedStreamReader) throws IOException {
-		super.errorHandler = new HttpErrorHandler();
+		this.clientSocket = clientSocket;
+		this.clientOutputStream = clientSocket.getOutputStream();
 		this.headers = message;
 		this.body = new ByteBuffer(Constants.HttpProtocol.requestBodyBufferSize);
 		this.bufferedStreamReader = bufferedStreamReader;
 	}
 
 	@Override
-	public void processMessage() throws IOException {
+	public void processCompleteMessage() throws IOException {
 		byte b = 0;
 		int state = HttpRequestStates.initialRequestLine;
 		int headerStart = 0, headerSemiColon = 0, previousHeaderSemiColon = 0;
@@ -46,8 +57,9 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 			switch (state) {
 			case HttpRequestStates.initialRequestLine:
 				if (b == '\n') {
-					initialLineArray = new String(headers.getBuffer(), 0,
-							headers.getPosition()).trim().split(" ");
+					initialLine = new String(headers.getBuffer(), 0,
+							headers.getPosition()).trim();
+					initialLineArray = initialLine.split(" ");
 					headerStart = headers.getPosition();
 					state = HttpRequestStates.headerLine;
 					break;
@@ -83,12 +95,115 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 				previousHeaderSemiColon = headerSemiColon;
 				break;
 			case HttpRequestStates.headersSectionEnd:
-				if (initialLineArray[0].equals("POST")) {
-					int len = Integer
-							.parseInt(headersMap.get("Content-Length"));
-					body.put(bufferedStreamReader.read(len));
-				}
+				if (isAuthorized()) {
+					if (checkSelfConnection() == true
+							|| connectToServer() == false)
+						return;
+
+					headersMap.remove("Proxy-Authorization");
+					HttpHeadersBuilder headersBuilder = new HttpHeadersBuilder(
+							new String[] { initialLine });
+					headersBuilder.addAllHeaders(headersMap);
+					headersBuilder.addHeader("Via: "
+							+ System.getProperty("os.name"));
+					byte[] modifiedHeaders = headersBuilder.getByteArray();
+					serverOutputStream.write(modifiedHeaders, 0,
+							modifiedHeaders.length);
+
+					if (initialLineArray[0].equals("POST")) {
+						String lengthHeaderValue = headersMap
+								.get("Content-Length");
+						if (lengthHeaderValue == null) {
+							String encodingHeaderValue = headersMap
+									.get("Transfer-Encoding");
+							if (encodingHeaderValue != null
+									&& encodingHeaderValue.equals("chunked")) {
+								readChunkedData(bufferedStreamReader);
+							}
+						} else {
+							int len = Integer.parseInt(lengthHeaderValue);
+							BufferedStreamReaderWriter bufferedStreamReaderWriter = new BufferedStreamReaderWriter(
+									serverOutputStream, bufferedStreamReader);
+							body.put(bufferedStreamReaderWriter.read(len));
+						}
+					}
+
+					HttpResponseProcessor httpResponseProcessor = new HttpResponseProcessor(
+							clientSocket, serverSocket);
+					httpResponseProcessor.processCompleteMessage();
+				} else
+					clientOutputStream.write(authorizationHeaders
+							.getByteArray());
+				if (serverSocket != null)
+					serverSocket.close();
 				return;
+			}
+		}
+	}
+
+	private void readChunkedData(BufferedStreamReader bufferedStreamReader)
+			throws IOException {
+		int state = HttpResponseStates.lengthLine, counter = 0;
+		StringBuilder length = new StringBuilder();
+		boolean skipRead = false, semicolonFound = false;
+		BufferedStreamReaderWriter bufferedStreamReaderWriter = new BufferedStreamReaderWriter(
+				serverOutputStream, bufferedStreamReader);
+		byte b = 0;
+		int prevLengthMarker = 0;
+		while (true) {
+			if (skipRead == false) {
+				b = bufferedStreamReader.read();
+				if (b == -1)
+					return;
+				body.put(b);
+			} else
+				skipRead = true;
+			switch (state) {
+			case HttpResponseStates.lengthLine:
+				if (b == '\n') {
+					state = HttpResponseStates.lengthLineEnd;
+					skipRead = true;
+					semicolonFound = false;
+					break;
+				} else if (semicolonFound)
+					break;
+				else if (b == ';') {
+					semicolonFound = true;
+					break;
+				}
+				length.append((char) b);
+				break;
+			case HttpResponseStates.lengthLineEnd:
+				clientOutputStream.write(body.getBuffer(), prevLengthMarker,
+						body.getPosition() - prevLengthMarker); // TODO: TCP!
+				int len = Integer.parseInt(length.toString().trim(), 16);
+				length = new StringBuilder();
+				if (len == 0) {
+					state = HttpResponseStates.readRemainingData;
+					counter = 0;
+					break;
+				}
+				body.put(bufferedStreamReaderWriter.read(len));
+				prevLengthMarker = body.getPosition();
+				while (true) {
+					b = bufferedStreamReader.read();
+					if (b == -1)
+						return;
+					body.put(b);
+					if (b == '\n')
+						break;
+				}
+				state = HttpResponseStates.lengthLine;
+				skipRead = false;
+				break;
+			case HttpResponseStates.readRemainingData:
+				if (b == '\n') {
+					if (counter < 2)
+						return;
+					counter = 0;
+				}
+				counter++;
+				break;
 			}
 		}
 	}
@@ -125,15 +240,6 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 	}
 
 	@Override
-	public ApplicationLayerProtocolProcessor getComplementaryProcessor(
-			InputStream inputStream) throws IOException {
-		return new HttpResponseProcessor(new ByteBuffer(
-				Constants.HttpProtocol.responseHeadersBufferSize),
-				new BufferedStreamReader(inputStream,
-						Constants.HttpProtocol.streamBufferSize));
-	}
-
-	@Override
 	public String getResource() {
 		return initialLineArray[1];
 	}
@@ -142,25 +248,37 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 		return headersEndingIndex;
 	}
 
-	@Override
-	public void sendMessage(OutputStream outputStream) throws IOException {
-		// TODO: Remove Proxy headers
-
-		outputStream.write(headers.getBuffer(), 0, headers.getPosition());
-		outputStream.write(body.getBuffer(), 0, body.getPosition());
-	}
-
-	@Override
-	public boolean isAuthorized(OutputStream outputStream) throws IOException {
+	private boolean isAuthorized() throws IOException {
 		String authorizationHeaderValue = headersMap.get("Proxy-Authorization");
-		// TODO: Check whether proper credentials or not.
 		if (authorizationHeaderValue != null
 				&& Authenticator.isValid(authorizationHeaderValue)) {
 			return true;
 		}
-		HttpHeadersBuilder authorizationHeaders = new HttpHeadersBuilder(
-				Constants.HttpProtocol.defaultAuthenticationHeaders);
-		outputStream.write(authorizationHeaders.getByteArray());
 		return false;
+	}
+
+	private boolean checkSelfConnection() throws IOException {
+		// Defense against denial-of-service class attack.
+		// Otherwise proxy server recursively connects to itself
+		// draining resources.
+
+		if (clientSocket.getInetAddress().isLoopbackAddress()
+				&& (getPort() == Constants.Server.port)) {
+			httpErrorHandler.sendHomePage(clientOutputStream);
+			return true;
+		}
+		return false;
+	}
+
+	private boolean connectToServer() throws IOException {
+		try {
+			serverSocket = new Socket(getServer(), getPort());
+			serverOutputStream = serverSocket.getOutputStream();
+		} catch (UnknownHostException e) {
+			httpErrorHandler.sendUnknownHostError(clientOutputStream,
+					getServer());
+			return false;
+		}
+		return true;
 	}
 }

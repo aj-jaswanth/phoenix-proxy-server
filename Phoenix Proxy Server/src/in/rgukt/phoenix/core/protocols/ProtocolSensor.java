@@ -5,16 +5,17 @@ import in.rgukt.phoenix.core.Constants;
 import in.rgukt.phoenix.core.protocols.http.HttpRequestProcessor;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.Socket;
 
 public class ProtocolSensor {
 
-	public static ApplicationLayerProtocolProcessor sense(
-			InputStream inputStream) throws IOException {
+	public static ApplicationLayerProtocolProcessor sense(Socket clientSocket)
+			throws IOException {
 		ByteBuffer message = new ByteBuffer(
 				Constants.HttpProtocol.requestHeadersBufferSize);
 		BufferedStreamReader bufferedStreamReader = new BufferedStreamReader(
-				inputStream, Constants.HttpProtocol.streamBufferSize);
+				clientSocket.getInputStream(),
+				Constants.HttpProtocol.streamBufferSize);
 		int state = 0, capacity = message.getCapacity();
 		for (int x = 0; x < capacity; x++) {
 			byte b = bufferedStreamReader.read();
@@ -32,7 +33,7 @@ public class ProtocolSensor {
 				break;
 			case 1:
 				if (b == 'E' || b == 'O' || b == 'P' || b == 'E' || b == 'R')
-					return new HttpRequestProcessor(message,
+					return new HttpRequestProcessor(clientSocket, message,
 							bufferedStreamReader);
 				break;
 			}

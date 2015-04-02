@@ -19,8 +19,8 @@ public class Constants {
 		public static final int requestHeadersBufferSize = 512;
 		public static final int responseHeadersBufferSize = 1024;
 		public static final int requestBodyBufferSize = 512;
-		public static final int responseBodyBufferSize = 8192;
-		public static final int streamBufferSize = 8192;
+		public static final int responseBodyBufferSize = 65536;
+		public static final int streamBufferSize = 65536;
 		public static final String[] defaultAcceptHeaders = new String[] {
 				"HTTP/1.1 200 OK", "Server: " + Constants.Server.name,
 				"Content-Type: text/html", "Proxy-Connection: keep-alive" };

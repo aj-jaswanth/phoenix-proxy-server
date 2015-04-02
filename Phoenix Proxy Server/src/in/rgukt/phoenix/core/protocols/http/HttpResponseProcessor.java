@@ -4,13 +4,20 @@ import in.rgukt.phoenix.core.ByteBuffer;
 import in.rgukt.phoenix.core.Constants;
 import in.rgukt.phoenix.core.protocols.ApplicationLayerProtocolProcessor;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReader;
+import in.rgukt.phoenix.core.protocols.BufferedStreamReaderWriter;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Socket;
 import java.util.HashMap;
 
 public class HttpResponseProcessor extends ApplicationLayerProtocolProcessor {
+	@SuppressWarnings("unused")
+	private Socket clientSocket;
+	private Socket serverSocket;
+	private OutputStream clientOutputStream;
+	private InputStream serverInputStream;
 	private ByteBuffer headers;
 	private ByteBuffer body;
 	private BufferedStreamReader bufferedStreamReader;
@@ -18,16 +25,22 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolProcessor {
 	private String[] initialLineArray;
 	private int headersEndingIndex;
 
-	public HttpResponseProcessor(ByteBuffer message,
-			BufferedStreamReader bufferedStreamReader) throws IOException {
-		this.headers = message;
+	public HttpResponseProcessor(Socket clientSocket, Socket serverSocket)
+			throws IOException {
+		this.clientSocket = clientSocket;
+		this.serverSocket = serverSocket;
+		this.clientOutputStream = clientSocket.getOutputStream();
+		this.serverInputStream = serverSocket.getInputStream();
+		this.headers = new ByteBuffer(
+				Constants.HttpProtocol.responseHeadersBufferSize);
 		this.body = new ByteBuffer(
 				Constants.HttpProtocol.responseBodyBufferSize);
-		this.bufferedStreamReader = bufferedStreamReader;
+		this.bufferedStreamReader = new BufferedStreamReader(serverInputStream,
+				Constants.HttpProtocol.streamBufferSize);
 	}
 
 	@Override
-	public void processMessage() throws IOException {
+	public void processCompleteMessage() throws IOException {
 		byte b = 0;
 		int state = HttpResponseStates.initialLine;
 		int headerStart = 0, headerSemiColon = 0, previousHeaderSemiColon = 0;
@@ -80,6 +93,8 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolProcessor {
 				previousHeaderSemiColon = headerSemiColon;
 				break;
 			case HttpResponseStates.headersSectionEnd:
+				clientOutputStream.write(headers.getBuffer(), 0,
+						headers.getPosition());
 				String lengthHeaderValue = headersMap.get("Content-Length");
 				if (lengthHeaderValue == null) {
 					String encodingHeaderValue = headersMap
@@ -90,22 +105,27 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolProcessor {
 					}
 				} else {
 					int len = Integer.parseInt(lengthHeaderValue);
-					body.put(bufferedStreamReader.read(len));
+					BufferedStreamReaderWriter bufferedStreamReaderWriter = new BufferedStreamReaderWriter(
+							clientOutputStream, bufferedStreamReader);
+					body.put(bufferedStreamReaderWriter.read(len));
 				}
 				return;
 			}
 		}
 	}
 
-	private void readChunkedData(BufferedStreamReader bufferedReader)
+	private void readChunkedData(BufferedStreamReader bufferedStreamReader)
 			throws IOException {
 		int state = HttpResponseStates.lengthLine, counter = 0;
 		StringBuilder length = new StringBuilder();
 		boolean skipRead = false, semicolonFound = false;
+		BufferedStreamReaderWriter bufferedStreamReaderWriter = new BufferedStreamReaderWriter(
+				clientOutputStream, bufferedStreamReader);
 		byte b = 0;
+		int prevLengthMarker = 0;
 		while (true) {
 			if (skipRead == false) {
-				b = bufferedReader.read();
+				b = bufferedStreamReader.read();
 				if (b == -1)
 					return;
 				body.put(b);
@@ -127,6 +147,8 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolProcessor {
 				length.append((char) b);
 				break;
 			case HttpResponseStates.lengthLineEnd:
+				clientOutputStream.write(body.getBuffer(), prevLengthMarker,
+						body.getPosition() - prevLengthMarker); // TODO: TCP!
 				int len = Integer.parseInt(length.toString().trim(), 16);
 				length = new StringBuilder();
 				if (len == 0) {
@@ -134,9 +156,10 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolProcessor {
 					counter = 0;
 					break;
 				}
-				body.put(bufferedReader.read(len));
+				body.put(bufferedStreamReaderWriter.read(len));
+				prevLengthMarker = body.getPosition();
 				while (true) {
-					b = bufferedReader.read();
+					b = bufferedStreamReader.read();
 					if (b == -1)
 						return;
 					body.put(b);
@@ -186,34 +209,8 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolProcessor {
 	}
 
 	@Override
-	public ApplicationLayerProtocolProcessor getComplementaryProcessor(
-			InputStream inputStream) throws IOException {
-		return new HttpRequestProcessor(new ByteBuffer(
-				Constants.HttpProtocol.requestHeadersBufferSize),
-				new BufferedStreamReader(inputStream,
-						Constants.HttpProtocol.streamBufferSize));
-	}
-
-	@Override
 	public String getResource() {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	public int getHeadersEndingIndex() {
-		return headersEndingIndex;
-	}
-
-	@Override
-	public void sendMessage(OutputStream outputStream) throws IOException {
-		// TODO: Header injection for authorization and Proxy-Connection
-
-		outputStream.write(headers.getBuffer(), 0, headers.getPosition());
-		outputStream.write(body.getBuffer(), 0, body.getPosition());
-	}
-
-	@Override
-	public boolean isAuthorized(OutputStream outputStream) throws IOException {
-		return true;
 	}
 }
