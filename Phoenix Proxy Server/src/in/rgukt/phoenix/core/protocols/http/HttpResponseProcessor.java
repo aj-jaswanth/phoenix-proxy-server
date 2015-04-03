@@ -12,9 +12,11 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.HashMap;
 
-public class HttpResponseProcessor extends ApplicationLayerProtocolProcessor {
+public final class HttpResponseProcessor extends
+		ApplicationLayerProtocolProcessor {
 	@SuppressWarnings("unused")
 	private Socket clientSocket;
+	@SuppressWarnings("unused")
 	private Socket serverSocket;
 	private OutputStream clientOutputStream;
 	private InputStream serverInputStream;
@@ -23,7 +25,6 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolProcessor {
 	private BufferedStreamReader bufferedStreamReader;
 	private HashMap<String, String> headersMap = new HashMap<String, String>();
 	private String[] initialLineArray;
-	private int headersEndingIndex;
 
 	public HttpResponseProcessor(Socket clientSocket, Socket serverSocket)
 			throws IOException {
@@ -77,11 +78,6 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolProcessor {
 				if (previousHeaderSemiColon == headerSemiColon) {
 					state = HttpResponseStates.headersSectionEnd;
 					skipRead = true;
-					int pos = headers.getPosition();
-					if (headers.get(pos - 2) == '\r')
-						headersEndingIndex = pos - 2;
-					else
-						headersEndingIndex = pos - 1;
 					break;
 				}
 				headersMap.put(new String(temp, headerStart, headerSemiColon
@@ -107,7 +103,10 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolProcessor {
 					int len = Integer.parseInt(lengthHeaderValue);
 					BufferedStreamReaderWriter bufferedStreamReaderWriter = new BufferedStreamReaderWriter(
 							clientOutputStream, bufferedStreamReader);
-					body.put(bufferedStreamReaderWriter.read(len));
+					if (len < Constants.HttpProtocol.inMemoryMaxResponseSaveSize)
+						body.put(bufferedStreamReaderWriter.readWrite(len));
+					else
+						bufferedStreamReaderWriter.readWriteNoReturn(len);
 				}
 				return;
 			}
@@ -156,7 +155,10 @@ public class HttpResponseProcessor extends ApplicationLayerProtocolProcessor {
 					counter = 0;
 					break;
 				}
-				body.put(bufferedStreamReaderWriter.read(len));
+				if (len < Constants.HttpProtocol.inMemoryMaxResponseSaveSize)
+					body.put(bufferedStreamReaderWriter.readWrite(len));
+				else
+					bufferedStreamReaderWriter.readWriteNoReturn(len);
 				prevLengthMarker = body.getPosition();
 				while (true) {
 					b = bufferedStreamReader.read();

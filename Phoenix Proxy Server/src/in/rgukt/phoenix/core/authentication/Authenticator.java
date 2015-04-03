@@ -1,13 +1,13 @@
 package in.rgukt.phoenix.core.authentication;
 
 import in.rgukt.phoenix.core.Constants;
+import in.rgukt.phoenix.core.TimeStamp;
 
-import java.sql.Timestamp;
 import java.util.HashMap;
 
 public class Authenticator {
 
-	protected static HashMap<String, Timestamp> cache = new HashMap<String, Timestamp>();
+	protected static HashMap<String, TimeStamp> cache = new HashMap<String, TimeStamp>();
 
 	public static boolean isValid(String str) {
 		if (isInCache(str))
@@ -30,13 +30,18 @@ public class Authenticator {
 		return true;
 	}
 
-	protected static boolean isInCache(String str) {
-		Timestamp tp = cache.get(str), currentTimeStamp = new Timestamp(
+	protected synchronized static boolean isInCache(String str) {
+		TimeStamp tp = cache.get(str), currentTimeStamp = new TimeStamp(
 				System.currentTimeMillis());
 		if (tp != null
 				&& (currentTimeStamp.getTime() - tp.getTime() < Constants.Server.credentialsttl)) {
 			return true;
 		}
 		return false;
+	}
+
+	protected synchronized static void addToCache(String str,
+			TimeStamp timeStamp) {
+		cache.put(str, timeStamp);
 	}
 }

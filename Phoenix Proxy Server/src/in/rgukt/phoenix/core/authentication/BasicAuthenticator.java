@@ -1,8 +1,8 @@
 package in.rgukt.phoenix.core.authentication;
 
+import in.rgukt.phoenix.core.TimeStamp;
 import in.rgukt.phoenix.core.authentication.decoders.Base64;
 
-import java.sql.Timestamp;
 import java.util.HashMap;
 
 public class BasicAuthenticator extends Authenticator {
@@ -18,7 +18,7 @@ public class BasicAuthenticator extends Authenticator {
 		if (a.length == 2) {
 			String s = map.get(a[0]);
 			if (s != null && s.equals(a[1])) {
-				cache.put(str, new Timestamp(System.currentTimeMillis()));
+				addToCache(str, new TimeStamp(System.currentTimeMillis()));
 				return true;
 			}
 		}

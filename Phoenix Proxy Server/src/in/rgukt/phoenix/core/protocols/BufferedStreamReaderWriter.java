@@ -16,7 +16,7 @@ public class BufferedStreamReaderWriter {
 		this.bufferedStreamReader = bufferedStreamReader;
 	}
 
-	public byte[] read(int length) throws IOException {
+	public byte[] readWrite(int length) throws IOException {
 		byte[] array = new byte[length], temp;
 		int bytesRead = 0;
 		int bytesToRead = Constants.HttpProtocol.streamBufferSize;
@@ -34,5 +34,20 @@ public class BufferedStreamReaderWriter {
 			outputStream.write(temp, 0, length);
 		}
 		return array;
+	}
+
+	public void readWriteNoReturn(int length) throws IOException {
+		int bytesToRead = Constants.HttpProtocol.streamBufferSize;
+		byte[] temp;
+
+		while (bytesToRead < length) {
+			temp = bufferedStreamReader.read(bytesToRead);
+			outputStream.write(temp, 0, bytesToRead);
+			length -= bytesToRead;
+		}
+		if (length > 0) {
+			temp = bufferedStreamReader.read(length);
+			outputStream.write(temp, 0, length);
+		}
 	}
 }

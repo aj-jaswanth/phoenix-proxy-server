@@ -13,7 +13,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 
-public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
+public final class HttpRequestProcessor extends
+		ApplicationLayerProtocolProcessor {
 
 	private Socket clientSocket;
 	private Socket serverSocket;
@@ -24,9 +25,7 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 	private BufferedStreamReader bufferedStreamReader;
 	private HashMap<String, String> headersMap = new HashMap<String, String>();
 	private String[] initialLineArray;
-	private String initialLine;
 	private String[] serverAddress;
-	private int headersEndingIndex;
 	private HttpHeadersBuilder authorizationHeaders = new HttpHeadersBuilder(
 			Constants.HttpProtocol.defaultAuthenticationHeaders);
 	private HttpErrorHandler httpErrorHandler = new HttpErrorHandler();
@@ -57,9 +56,8 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 			switch (state) {
 			case HttpRequestStates.initialRequestLine:
 				if (b == '\n') {
-					initialLine = new String(headers.getBuffer(), 0,
-							headers.getPosition()).trim();
-					initialLineArray = initialLine.split(" ");
+					initialLineArray = new String(headers.getBuffer(), 0,
+							headers.getPosition()).trim().split(" ");
 					headerStart = headers.getPosition();
 					state = HttpRequestStates.headerLine;
 					break;
@@ -79,11 +77,6 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 				if (previousHeaderSemiColon == headerSemiColon) {
 					state = HttpRequestStates.headersSectionEnd;
 					skipRead = true;
-					int pos = headers.getPosition();
-					if (headers.get(pos - 2) == '\r')
-						headersEndingIndex = pos - 2;
-					else
-						headersEndingIndex = pos - 1;
 					break;
 				}
 				headersMap.put(new String(temp, headerStart, headerSemiColon
@@ -102,7 +95,10 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 
 					headersMap.remove("Proxy-Authorization");
 					HttpHeadersBuilder headersBuilder = new HttpHeadersBuilder(
-							new String[] { initialLine });
+							new String[] { initialLineArray[0]
+									+ " "
+									+ removePreceedingHostData(initialLineArray[1])
+									+ " " + initialLineArray[2] });
 					headersBuilder.addAllHeaders(headersMap);
 					headersBuilder.addHeader("Via: "
 							+ System.getProperty("os.name"));
@@ -124,7 +120,12 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 							int len = Integer.parseInt(lengthHeaderValue);
 							BufferedStreamReaderWriter bufferedStreamReaderWriter = new BufferedStreamReaderWriter(
 									serverOutputStream, bufferedStreamReader);
-							body.put(bufferedStreamReaderWriter.read(len));
+							if (len < Constants.HttpProtocol.inMemoryMaxResponseSaveSize)
+								body.put(bufferedStreamReaderWriter
+										.readWrite(len));
+							else
+								bufferedStreamReaderWriter
+										.readWriteNoReturn(len);
 						}
 					}
 
@@ -183,7 +184,10 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 					counter = 0;
 					break;
 				}
-				body.put(bufferedStreamReaderWriter.read(len));
+				if (len < Constants.HttpProtocol.inMemoryMaxResponseSaveSize)
+					body.put(bufferedStreamReaderWriter.readWrite(len));
+				else
+					bufferedStreamReaderWriter.readWriteNoReturn(len);
 				prevLengthMarker = body.getPosition();
 				while (true) {
 					b = bufferedStreamReader.read();
@@ -244,10 +248,6 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 		return initialLineArray[1];
 	}
 
-	public int getHeadersEndingIndex() {
-		return headersEndingIndex;
-	}
-
 	private boolean isAuthorized() throws IOException {
 		String authorizationHeaderValue = headersMap.get("Proxy-Authorization");
 		if (authorizationHeaderValue != null
@@ -280,5 +280,9 @@ public class HttpRequestProcessor extends ApplicationLayerProtocolProcessor {
 			return false;
 		}
 		return true;
+	}
+
+	private String removePreceedingHostData(String str) {
+		return str.substring(7 + getValue("Host").length(), str.length());
 	}
 }
