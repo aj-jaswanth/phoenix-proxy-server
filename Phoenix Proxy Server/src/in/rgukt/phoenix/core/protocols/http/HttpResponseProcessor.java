@@ -2,6 +2,7 @@ package in.rgukt.phoenix.core.protocols.http;
 
 import in.rgukt.phoenix.core.ByteBuffer;
 import in.rgukt.phoenix.core.Constants;
+import in.rgukt.phoenix.core.caching.CacheManager;
 import in.rgukt.phoenix.core.protocols.ApplicationLayerProtocolProcessor;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReader;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReaderWriter;
@@ -25,9 +26,11 @@ public final class HttpResponseProcessor extends
 	private BufferedStreamReader bufferedStreamReader;
 	private HashMap<String, String> headersMap = new HashMap<String, String>();
 	private String[] initialLineArray;
+	private String requestedResource;
 
-	public HttpResponseProcessor(Socket clientSocket, Socket serverSocket)
-			throws IOException {
+	public HttpResponseProcessor(String requestedResource, Socket clientSocket,
+			Socket serverSocket) throws IOException {
+		this.requestedResource = requestedResource;
 		this.clientSocket = clientSocket;
 		this.serverSocket = serverSocket;
 		this.clientOutputStream = clientSocket.getOutputStream();
@@ -103,9 +106,11 @@ public final class HttpResponseProcessor extends
 					int len = Integer.parseInt(lengthHeaderValue);
 					BufferedStreamReaderWriter bufferedStreamReaderWriter = new BufferedStreamReaderWriter(
 							clientOutputStream, bufferedStreamReader);
-					if (len < Constants.HttpProtocol.inMemoryMaxResponseSaveSize)
+					if (len < Constants.HttpProtocol.inMemoryMaxResponseSaveSize) {
 						body.put(bufferedStreamReaderWriter.readWrite(len));
-					else
+						CacheManager.inspect(requestedResource, headersMap,
+								body);
+					} else
 						bufferedStreamReaderWriter.readWriteNoReturn(len);
 				}
 				return;
@@ -155,10 +160,7 @@ public final class HttpResponseProcessor extends
 					counter = 0;
 					break;
 				}
-				if (len < Constants.HttpProtocol.inMemoryMaxResponseSaveSize)
-					body.put(bufferedStreamReaderWriter.readWrite(len));
-				else
-					bufferedStreamReaderWriter.readWriteNoReturn(len);
+				bufferedStreamReaderWriter.readWriteNoReturn(len);
 				prevLengthMarker = body.getPosition();
 				while (true) {
 					b = bufferedStreamReader.read();

@@ -31,17 +31,15 @@ public class Authenticator {
 	}
 
 	protected synchronized static boolean isInCache(String str) {
-		TimeStamp tp = cache.get(str), currentTimeStamp = new TimeStamp(
-				System.currentTimeMillis());
+		TimeStamp tp = cache.get(str);
 		if (tp != null
-				&& (currentTimeStamp.getTime() - tp.getTime() < Constants.Server.credentialsttl)) {
+				&& (TimeStamp.getCurrentDifference(tp) < Constants.Server.credentialsttl)) {
 			return true;
 		}
 		return false;
 	}
 
-	protected synchronized static void addToCache(String str,
-			TimeStamp timeStamp) {
-		cache.put(str, timeStamp);
+	protected synchronized static void addToAuthenticationCache(String str) {
+		cache.put(str, TimeStamp.getCurrentTimeStamp());
 	}
 }

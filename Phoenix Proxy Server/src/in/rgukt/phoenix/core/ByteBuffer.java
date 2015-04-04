@@ -50,6 +50,12 @@ public class ByteBuffer {
 		return buffer;
 	}
 
+	public byte[] getTrimmedBuffer() {
+		if (position < capacity)
+			trim();
+		return buffer;
+	}
+
 	public int getPosition() {
 		return position;
 	}

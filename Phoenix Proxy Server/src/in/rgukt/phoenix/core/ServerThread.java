@@ -6,15 +6,9 @@ import in.rgukt.phoenix.core.protocols.ProtocolSensor;
 import java.io.IOException;
 import java.net.Socket;
 
-import org.apache.log4j.Logger;
-
 public class ServerThread implements Runnable {
 	private Socket clientSocket;
 	private ApplicationLayerProtocolProcessor applicationLayerRequestProcessor;
-	private static Logger logger;
-	static {
-		logger = Logger.getLogger(ServerThread.class);
-	}
 
 	public ServerThread(Socket client) {
 		this.clientSocket = client;
@@ -33,8 +27,8 @@ public class ServerThread implements Runnable {
 			}
 			applicationLayerRequestProcessor.processCompleteMessage();
 
-			logger.debug(Thread.currentThread().getName() + " "
-					+ applicationLayerRequestProcessor.getResource());
+			// System.out.println(Thread.currentThread().getName() + " "
+			// + applicationLayerRequestProcessor.getResource());
 
 		} catch (IOException e) {
 			e.printStackTrace();

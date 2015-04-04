@@ -3,6 +3,8 @@ package in.rgukt.phoenix.core.protocols.http;
 import in.rgukt.phoenix.core.ByteBuffer;
 import in.rgukt.phoenix.core.Constants;
 import in.rgukt.phoenix.core.authentication.Authenticator;
+import in.rgukt.phoenix.core.caching.CacheItem;
+import in.rgukt.phoenix.core.caching.CacheManager;
 import in.rgukt.phoenix.core.protocols.ApplicationLayerProtocolProcessor;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReader;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReaderWriter;
@@ -88,50 +90,63 @@ public final class HttpRequestProcessor extends
 				previousHeaderSemiColon = headerSemiColon;
 				break;
 			case HttpRequestStates.headersSectionEnd:
+				if (checkSelfConnection() == true)
+					return;
 				if (isAuthorized()) {
-					if (checkSelfConnection() == true
-							|| connectToServer() == false)
-						return;
+					CacheItem cacheItem = CacheManager
+							.getFromCache(initialLineArray[1]);
+					if (cacheItem != null) {
+						System.out
+								.println("Cache HIT : " + initialLineArray[1]);
+						clientOutputStream.write(cacheItem.getHeaders());
+						clientOutputStream.write(cacheItem.getBody());
+					} else {
+						System.out.println("Cache MISS : "
+								+ initialLineArray[1]);
+						if (connectToServer() == false)
+							return;
 
-					headersMap.remove("Proxy-Authorization");
-					HttpHeadersBuilder headersBuilder = new HttpHeadersBuilder(
-							new String[] { initialLineArray[0]
-									+ " "
-									+ removePreceedingHostData(initialLineArray[1])
-									+ " " + initialLineArray[2] });
-					headersBuilder.addAllHeaders(headersMap);
-					headersBuilder.addHeader("Via: "
-							+ System.getProperty("os.name"));
-					byte[] modifiedHeaders = headersBuilder.getByteArray();
-					serverOutputStream.write(modifiedHeaders, 0,
-							modifiedHeaders.length);
+						headersMap.remove("Proxy-Authorization");
+						HttpHeadersBuilder headersBuilder = new HttpHeadersBuilder(
+								new String[] { initialLineArray[0]
+										+ " "
+										+ removePreceedingHostData(initialLineArray[1])
+										+ " " + initialLineArray[2] });
+						headersBuilder.addAllHeaders(headersMap);
+						headersBuilder.addHeader("Via: "
+								+ System.getProperty("os.name"));
+						headersBuilder.addHeader("X-Forwarded-For: "
+								+ clientSocket.getInetAddress()
+										.getHostAddress());
+						byte[] modifiedHeaders = headersBuilder.getByteArray();
+						serverOutputStream.write(modifiedHeaders, 0,
+								modifiedHeaders.length);
 
-					if (initialLineArray[0].equals("POST")) {
-						String lengthHeaderValue = headersMap
-								.get("Content-Length");
-						if (lengthHeaderValue == null) {
-							String encodingHeaderValue = headersMap
-									.get("Transfer-Encoding");
-							if (encodingHeaderValue != null
-									&& encodingHeaderValue.equals("chunked")) {
-								readChunkedData(bufferedStreamReader);
-							}
-						} else {
-							int len = Integer.parseInt(lengthHeaderValue);
-							BufferedStreamReaderWriter bufferedStreamReaderWriter = new BufferedStreamReaderWriter(
-									serverOutputStream, bufferedStreamReader);
-							if (len < Constants.HttpProtocol.inMemoryMaxResponseSaveSize)
-								body.put(bufferedStreamReaderWriter
-										.readWrite(len));
-							else
+						if (initialLineArray[0].equals("POST")) {
+							String lengthHeaderValue = headersMap
+									.get("Content-Length");
+							if (lengthHeaderValue == null) {
+								String encodingHeaderValue = headersMap
+										.get("Transfer-Encoding");
+								if (encodingHeaderValue != null
+										&& encodingHeaderValue
+												.equals("chunked")) {
+									readChunkedData(bufferedStreamReader);
+								}
+							} else {
+								int len = Integer.parseInt(lengthHeaderValue);
+								BufferedStreamReaderWriter bufferedStreamReaderWriter = new BufferedStreamReaderWriter(
+										serverOutputStream,
+										bufferedStreamReader);
 								bufferedStreamReaderWriter
 										.readWriteNoReturn(len);
+							}
 						}
-					}
 
-					HttpResponseProcessor httpResponseProcessor = new HttpResponseProcessor(
-							clientSocket, serverSocket);
-					httpResponseProcessor.processCompleteMessage();
+						HttpResponseProcessor httpResponseProcessor = new HttpResponseProcessor(
+								initialLineArray[1], clientSocket, serverSocket);
+						httpResponseProcessor.processCompleteMessage();
+					}
 				} else
 					clientOutputStream.write(authorizationHeaders
 							.getByteArray());
@@ -184,10 +199,7 @@ public final class HttpRequestProcessor extends
 					counter = 0;
 					break;
 				}
-				if (len < Constants.HttpProtocol.inMemoryMaxResponseSaveSize)
-					body.put(bufferedStreamReaderWriter.readWrite(len));
-				else
-					bufferedStreamReaderWriter.readWriteNoReturn(len);
+				bufferedStreamReaderWriter.readWriteNoReturn(len);
 				prevLengthMarker = body.getPosition();
 				while (true) {
 					b = bufferedStreamReader.read();

@@ -8,6 +8,7 @@ import java.util.Map;
 public class HttpHeadersBuilder {
 	private ByteBuffer headerBuffer;
 	private byte[] delimiter = "\r\n".getBytes();
+	private byte[] byteArray;
 
 	public HttpHeadersBuilder(String[] headers) {
 		headerBuffer = new ByteBuffer(
@@ -29,8 +30,11 @@ public class HttpHeadersBuilder {
 	}
 
 	public byte[] getByteArray() {
-		headerBuffer.put(delimiter);
-		headerBuffer.trim();
-		return headerBuffer.getBuffer();
+		if (byteArray == null) {
+			headerBuffer.put(delimiter);
+			headerBuffer.trim();
+			byteArray = headerBuffer.getBuffer();
+		}
+		return byteArray;
 	}
 }

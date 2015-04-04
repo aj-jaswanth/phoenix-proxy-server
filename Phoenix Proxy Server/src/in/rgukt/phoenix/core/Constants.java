@@ -5,7 +5,6 @@ public class Constants {
 		public static String name = "Phoenix Proxy Server";
 		public static int port = 3128;
 		public static long credentialsttl = 2 * 60 * 60 * 1000;
-		public static int gcCount = 20;
 	}
 
 	public static class HttpProtocol {
@@ -22,7 +21,7 @@ public class Constants {
 		public static final int requestBodyBufferSize = 1 << 9;
 		public static final int responseBodyBufferSize = 64 << 10;
 		public static final int streamBufferSize = 64 << 10;
-		public static final int inMemoryMaxResponseSaveSize = 120;// 5 << 20;
+		public static final int inMemoryMaxResponseSaveSize = 5 << 20;
 		public static final String[] defaultAcceptHeaders = new String[] {
 				"HTTP/1.1 200 OK", "Server: " + Constants.Server.name,
 				"Content-Type: text/html", "Proxy-Connection: keep-alive" };
