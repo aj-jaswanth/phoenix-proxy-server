@@ -3,7 +3,7 @@ package in.rgukt.phoenix.core.protocols;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class BufferedStreamReader {
+public final class BufferedStreamReader {
 
 	private InputStream inputStream;
 	private byte[] buffer;

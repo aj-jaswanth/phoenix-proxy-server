@@ -6,7 +6,7 @@ import in.rgukt.phoenix.core.protocols.ProtocolSensor;
 import java.io.IOException;
 import java.net.Socket;
 
-public class ServerThread implements Runnable {
+public final class ServerThread implements Runnable {
 	private Socket clientSocket;
 	private ApplicationLayerProtocolProcessor applicationLayerRequestProcessor;
 

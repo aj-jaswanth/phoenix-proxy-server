@@ -5,6 +5,7 @@ import in.rgukt.phoenix.core.Constants;
 import in.rgukt.phoenix.core.authentication.Authenticator;
 import in.rgukt.phoenix.core.caching.CacheItem;
 import in.rgukt.phoenix.core.caching.CacheManager;
+import in.rgukt.phoenix.core.database.DatabaseLogger;
 import in.rgukt.phoenix.core.protocols.ApplicationLayerProtocolProcessor;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReader;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReaderWriter;
@@ -92,7 +93,9 @@ public final class HttpRequestProcessor extends
 			case HttpRequestStates.headersSectionEnd:
 				if (checkSelfConnection() == true)
 					return;
-				if (isAuthorized()) {
+				String userName = isAuthorized();
+				if (userName != null) {
+					DatabaseLogger.log(userName, initialLineArray[1]);
 					CacheItem cacheItem = CacheManager
 							.getFromCache(initialLineArray[1]);
 					if (cacheItem != null) {
@@ -113,8 +116,7 @@ public final class HttpRequestProcessor extends
 										+ removePreceedingHostData(initialLineArray[1])
 										+ " " + initialLineArray[2] });
 						headersBuilder.addAllHeaders(headersMap);
-						headersBuilder.addHeader("Via: "
-								+ System.getProperty("os.name"));
+						headersBuilder.addHeader("Via: " + "Phoenix");
 						headersBuilder.addHeader("X-Forwarded-For: "
 								+ clientSocket.getInetAddress()
 										.getHostAddress());
@@ -260,13 +262,14 @@ public final class HttpRequestProcessor extends
 		return initialLineArray[1];
 	}
 
-	private boolean isAuthorized() throws IOException {
+	private String isAuthorized() throws IOException {
 		String authorizationHeaderValue = headersMap.get("Proxy-Authorization");
-		if (authorizationHeaderValue != null
-				&& Authenticator.isValid(authorizationHeaderValue)) {
-			return true;
+		if (authorizationHeaderValue != null) {
+			String userName = Authenticator.isValid(authorizationHeaderValue);
+			if (userName != null)
+				return userName;
 		}
-		return false;
+		return null;
 	}
 
 	private boolean checkSelfConnection() throws IOException {

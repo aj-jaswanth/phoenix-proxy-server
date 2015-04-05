@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-public class FileHandler {
+public final class FileHandler {
 	public static byte[] readAsBytes(String fileLocation) throws IOException {
 		URL fileUrl = ClassLoader.getSystemClassLoader().getResource(
 				fileLocation);

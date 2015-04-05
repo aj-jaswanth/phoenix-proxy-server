@@ -5,10 +5,10 @@ import in.rgukt.phoenix.core.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CacheManager {
+public final class CacheManager {
 	private static Map<String, CacheItem> mainCache = new HashMap<String, CacheItem>();
 
-	public static synchronized CacheItem getFromCache(String resource) {
+	public static CacheItem getFromCache(String resource) {
 		CacheItem cacheItem = mainCache.get(resource);
 		if (cacheItem != null) {
 			Map<String, String> headersMap = cacheItem.getHeadersMap();
@@ -63,7 +63,7 @@ public class CacheManager {
 		return map;
 	}
 
-	private static synchronized void addToCache(String key, CacheItem cacheItem) {
+	private static void addToCache(String key, CacheItem cacheItem) {
 		mainCache.put(key, cacheItem);
 	}
 

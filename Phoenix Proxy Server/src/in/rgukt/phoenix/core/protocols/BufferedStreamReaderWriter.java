@@ -5,7 +5,7 @@ import in.rgukt.phoenix.core.Constants;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class BufferedStreamReaderWriter {
+public final class BufferedStreamReaderWriter {
 
 	private OutputStream outputStream;
 	private BufferedStreamReader bufferedStreamReader;

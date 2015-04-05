@@ -1,6 +1,6 @@
 package in.rgukt.phoenix.core;
 
-public class TimeStamp {
+public final class TimeStamp {
 	private long time;
 
 	public static TimeStamp getCurrentTimeStamp() {

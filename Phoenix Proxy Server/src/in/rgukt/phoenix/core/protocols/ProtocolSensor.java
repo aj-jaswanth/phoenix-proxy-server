@@ -7,7 +7,7 @@ import in.rgukt.phoenix.core.protocols.http.HttpRequestProcessor;
 import java.io.IOException;
 import java.net.Socket;
 
-public class ProtocolSensor {
+public final class ProtocolSensor {
 
 	public static ApplicationLayerProtocolProcessor sense(Socket clientSocket)
 			throws IOException {

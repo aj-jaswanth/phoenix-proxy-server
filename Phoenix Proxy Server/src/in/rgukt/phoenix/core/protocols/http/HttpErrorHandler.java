@@ -5,7 +5,7 @@ import in.rgukt.phoenix.core.Constants;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class HttpErrorHandler {
+public final class HttpErrorHandler {
 
 	public void sendInvalidProtocolError(OutputStream outputStream)
 			throws IOException {

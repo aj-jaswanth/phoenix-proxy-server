@@ -1,14 +1,26 @@
 package in.rgukt.phoenix.core;
 
-public class Constants {
-	public static class Server {
-		public static String name = "Phoenix Proxy Server";
-		public static int port = 3128;
-		public static long credentialsttl = 2 * 60 * 60 * 1000;
+public final class Constants {
+	public static final class Server {
+		public static final String name = "Phoenix Proxy Server";
+		public static final int port = 3128;
+		public static final long credentialsttl = 2 * 60 * 60 * 1000;
 	}
 
-	public static class HttpProtocol {
-		public static class ErrorResponses {
+	public static final class Database {
+		public static final String driver = "com.mysql.jdbc.Driver";
+		public static final String url = "jdbc:mysql://localhost/proxy";
+		public static final String userName = "root";
+		public static final String password = "";
+
+		public static final class Queries {
+			public static final String authenticationQuery = "SELECT password FROM users WHERE uname=?";
+			public static final String loggingQuery = "INSERT INTO log values(?,?,?)";
+		}
+	}
+
+	public static final class HttpProtocol {
+		public static final class ErrorResponses {
 			public static byte[] invalidProtocolHtml;
 			public static byte[] homePageHtml;
 		}

@@ -7,11 +7,12 @@ import java.util.HashMap;
 
 public class Authenticator {
 
-	protected static HashMap<String, TimeStamp> cache = new HashMap<String, TimeStamp>();
+	protected static HashMap<String, AuthenticationCacheItem> authenticationCache = new HashMap<String, AuthenticationCacheItem>();
 
-	public static boolean isValid(String str) {
-		if (isInCache(str))
-			return true;
+	public static String isValid(String str) {
+		String userName = isInCache(str);
+		if (userName != null)
+			return userName;
 		int state = 0;
 		char c;
 		for (int x = 0; x < str.length(); x++) {
@@ -27,19 +28,21 @@ public class Authenticator {
 				break;
 			}
 		}
-		return true;
+		return null;
 	}
 
-	protected synchronized static boolean isInCache(String str) {
-		TimeStamp tp = cache.get(str);
-		if (tp != null
-				&& (TimeStamp.getCurrentDifference(tp) < Constants.Server.credentialsttl)) {
-			return true;
+	protected synchronized static String isInCache(String str) {
+		AuthenticationCacheItem cacheItem = authenticationCache.get(str);
+		if (cacheItem != null
+				&& (TimeStamp.getCurrentDifference(cacheItem
+						.getCachedTimeStamp()) < Constants.Server.credentialsttl)) {
+			return cacheItem.getUserName();
 		}
-		return false;
+		return null;
 	}
 
-	protected synchronized static void addToAuthenticationCache(String str) {
-		cache.put(str, TimeStamp.getCurrentTimeStamp());
+	protected synchronized static void addToAuthenticationCache(String str,
+			AuthenticationCacheItem authenticationCacheItem) {
+		authenticationCache.put(str, authenticationCacheItem);
 	}
 }

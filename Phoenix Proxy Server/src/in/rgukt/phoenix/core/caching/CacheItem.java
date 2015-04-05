@@ -5,7 +5,7 @@ import in.rgukt.phoenix.core.protocols.http.HttpHeadersBuilder;
 
 import java.util.Map;
 
-public class CacheItem {
+public final class CacheItem {
 	private CacheCriteria cacheCriteria;
 	private Map<String, String> headersMap;
 	private byte[] body;

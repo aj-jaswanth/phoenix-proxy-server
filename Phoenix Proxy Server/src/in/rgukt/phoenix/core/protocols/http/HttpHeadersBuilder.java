@@ -5,7 +5,7 @@ import in.rgukt.phoenix.core.Constants;
 
 import java.util.Map;
 
-public class HttpHeadersBuilder {
+public final class HttpHeadersBuilder {
 	private ByteBuffer headerBuffer;
 	private byte[] delimiter = "\r\n".getBytes();
 	private byte[] byteArray;

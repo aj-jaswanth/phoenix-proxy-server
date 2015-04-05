@@ -2,7 +2,7 @@ package in.rgukt.phoenix.core;
 
 import java.util.Arrays;
 
-public class ByteBuffer {
+public final class ByteBuffer {
 
 	private byte[] buffer;
 	private int position;
