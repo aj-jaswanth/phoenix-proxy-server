@@ -20,7 +20,6 @@ public final class DatabaseAuthenticator {
 								Constants.Database.Queries.authenticationQuery);
 			authenticationStatement.setString(1, userName);
 			ResultSet result = authenticationStatement.executeQuery();
-
 			if (result.next())
 				password = result.getString(1);
 		} catch (ClassNotFoundException e) {

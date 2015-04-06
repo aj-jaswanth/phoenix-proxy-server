@@ -5,7 +5,7 @@ import in.rgukt.phoenix.core.Constants;
 import in.rgukt.phoenix.core.authentication.Authenticator;
 import in.rgukt.phoenix.core.caching.CacheItem;
 import in.rgukt.phoenix.core.caching.CacheManager;
-import in.rgukt.phoenix.core.database.DatabaseLogger;
+import in.rgukt.phoenix.core.logging.FileLogger;
 import in.rgukt.phoenix.core.protocols.ApplicationLayerProtocolProcessor;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReader;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReaderWriter;
@@ -32,6 +32,7 @@ public final class HttpRequestProcessor extends
 	private HttpHeadersBuilder authorizationHeaders = new HttpHeadersBuilder(
 			Constants.HttpProtocol.defaultAuthenticationHeaders);
 	private HttpErrorHandler httpErrorHandler = new HttpErrorHandler();
+	private long dataUploaded = 0, dataDownloaded = 0;
 
 	public HttpRequestProcessor(Socket clientSocket, ByteBuffer message,
 			BufferedStreamReader bufferedStreamReader) throws IOException {
@@ -43,7 +44,7 @@ public final class HttpRequestProcessor extends
 	}
 
 	@Override
-	public void processCompleteMessage() throws IOException {
+	public long processCompleteMessage() throws IOException {
 		byte b = 0;
 		int state = HttpRequestStates.initialRequestLine;
 		int headerStart = 0, headerSemiColon = 0, previousHeaderSemiColon = 0;
@@ -52,7 +53,7 @@ public final class HttpRequestProcessor extends
 			if (skipRead == false) {
 				b = bufferedStreamReader.read();
 				if (b == -1)
-					return;
+					return 0;
 				headers.put(b);
 			} else
 				skipRead = false;
@@ -92,22 +93,22 @@ public final class HttpRequestProcessor extends
 				break;
 			case HttpRequestStates.headersSectionEnd:
 				if (checkSelfConnection() == true)
-					return;
+					return 0;
 				String userName = isAuthorized();
+				boolean cacheHit = false;
 				if (userName != null) {
-					DatabaseLogger.log(userName, initialLineArray[1]);
+					dataUploaded = headers.getPosition();
 					CacheItem cacheItem = CacheManager
 							.getFromCache(initialLineArray[1]);
 					if (cacheItem != null) {
-						System.out
-								.println("Cache HIT : " + initialLineArray[1]);
+						dataDownloaded = cacheItem.getHeaders().length;
+						dataDownloaded += cacheItem.getBody().length;
 						clientOutputStream.write(cacheItem.getHeaders());
 						clientOutputStream.write(cacheItem.getBody());
+						cacheHit = true;
 					} else {
-						System.out.println("Cache MISS : "
-								+ initialLineArray[1]);
 						if (connectToServer() == false)
-							return;
+							return 0;
 
 						headersMap.remove("Proxy-Authorization");
 						HttpHeadersBuilder headersBuilder = new HttpHeadersBuilder(
@@ -137,6 +138,7 @@ public final class HttpRequestProcessor extends
 								}
 							} else {
 								int len = Integer.parseInt(lengthHeaderValue);
+								dataUploaded += len;
 								BufferedStreamReaderWriter bufferedStreamReaderWriter = new BufferedStreamReaderWriter(
 										serverOutputStream,
 										bufferedStreamReader);
@@ -147,14 +149,17 @@ public final class HttpRequestProcessor extends
 
 						HttpResponseProcessor httpResponseProcessor = new HttpResponseProcessor(
 								initialLineArray[1], clientSocket, serverSocket);
-						httpResponseProcessor.processCompleteMessage();
+						dataDownloaded = httpResponseProcessor
+								.processCompleteMessage();
+						serverSocket.close();
 					}
 				} else
 					clientOutputStream.write(authorizationHeaders
 							.getByteArray());
-				if (serverSocket != null)
-					serverSocket.close();
-				return;
+				clientSocket.close();
+				FileLogger.logRequest(userName, initialLineArray[1], cacheHit,
+						dataUploaded, dataDownloaded);
+				return dataUploaded;
 			}
 		}
 	}
@@ -195,6 +200,7 @@ public final class HttpRequestProcessor extends
 				clientOutputStream.write(body.getBuffer(), prevLengthMarker,
 						body.getPosition() - prevLengthMarker); // TODO: TCP!
 				int len = Integer.parseInt(length.toString().trim(), 16);
+				dataUploaded += len;
 				length = new StringBuilder();
 				if (len == 0) {
 					state = HttpResponseStates.readRemainingData;

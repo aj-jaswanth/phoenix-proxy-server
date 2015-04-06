@@ -27,6 +27,7 @@ public final class HttpResponseProcessor extends
 	private HashMap<String, String> headersMap = new HashMap<String, String>();
 	private String[] initialLineArray;
 	private String requestedResource;
+	private long dataDownloaded = 0;
 
 	public HttpResponseProcessor(String requestedResource, Socket clientSocket,
 			Socket serverSocket) throws IOException {
@@ -44,7 +45,7 @@ public final class HttpResponseProcessor extends
 	}
 
 	@Override
-	public void processCompleteMessage() throws IOException {
+	public long processCompleteMessage() throws IOException {
 		byte b = 0;
 		int state = HttpResponseStates.initialLine;
 		int headerStart = 0, headerSemiColon = 0, previousHeaderSemiColon = 0;
@@ -53,7 +54,7 @@ public final class HttpResponseProcessor extends
 			if (skipRead == false) {
 				b = bufferedStreamReader.read();
 				if (b == -1)
-					return;
+					return 0;
 				headers.put(b);
 			} else
 				skipRead = false;
@@ -94,6 +95,7 @@ public final class HttpResponseProcessor extends
 			case HttpResponseStates.headersSectionEnd:
 				clientOutputStream.write(headers.getBuffer(), 0,
 						headers.getPosition());
+				dataDownloaded = headers.getPosition();
 				String lengthHeaderValue = headersMap.get("Content-Length");
 				if (lengthHeaderValue == null) {
 					String encodingHeaderValue = headersMap
@@ -104,6 +106,7 @@ public final class HttpResponseProcessor extends
 					}
 				} else {
 					int len = Integer.parseInt(lengthHeaderValue);
+					dataDownloaded += len;
 					BufferedStreamReaderWriter bufferedStreamReaderWriter = new BufferedStreamReaderWriter(
 							clientOutputStream, bufferedStreamReader);
 					if (len < Constants.HttpProtocol.inMemoryMaxResponseSaveSize) {
@@ -113,7 +116,7 @@ public final class HttpResponseProcessor extends
 					} else
 						bufferedStreamReaderWriter.readWriteNoReturn(len);
 				}
-				return;
+				return dataDownloaded;
 			}
 		}
 	}
@@ -154,6 +157,7 @@ public final class HttpResponseProcessor extends
 				clientOutputStream.write(body.getBuffer(), prevLengthMarker,
 						body.getPosition() - prevLengthMarker); // TODO: TCP!
 				int len = Integer.parseInt(length.toString().trim(), 16);
+				dataDownloaded += len;
 				length = new StringBuilder();
 				if (len == 0) {
 					state = HttpResponseStates.readRemainingData;

@@ -14,7 +14,7 @@ public abstract class ApplicationLayerProtocolProcessor {
 
 	public abstract String getName();
 
-	public abstract void processCompleteMessage() throws IOException;
+	public abstract long processCompleteMessage() throws IOException;
 
 	public abstract String getResource();
 

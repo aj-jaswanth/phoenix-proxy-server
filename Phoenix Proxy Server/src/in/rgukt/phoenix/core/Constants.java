@@ -15,7 +15,7 @@ public final class Constants {
 
 		public static final class Queries {
 			public static final String authenticationQuery = "SELECT password FROM users WHERE uname=?";
-			public static final String loggingQuery = "INSERT INTO log values(?,?,?)";
+			public static final String loggingQuery = "INSERT INTO log values(?,?,?,?)";
 		}
 	}
 
