@@ -17,6 +17,8 @@ public class Main {
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException, ExecutionException {
+		if (args.length == 1)
+			Configurator.configureServer(args[0]);
 		ServerSocket serverSocket = new ServerSocket(Constants.Server.port);
 		initialize();
 		ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(4, 10,

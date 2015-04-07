@@ -26,10 +26,6 @@ public final class ServerThread implements Runnable {
 				return;
 			}
 			applicationLayerRequestProcessor.processCompleteMessage();
-
-			// System.out.println(Thread.currentThread().getName() + " "
-			// + applicationLayerRequestProcessor.getResource());
-
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
