@@ -77,13 +77,12 @@ public final class CacheManager {
 	}
 
 	private static void cleanUpCache() {
-		System.out.println("Clean up...");
 		ArrayList<Entry<String, CacheItem>> keys = new ArrayList<Entry<String, CacheItem>>();
 		long prevSize = cacheSize, cacheLimit = (long) (Constants.HttpProtocol.maxCacheSize * 0.8);
 		long currentTime = System.currentTimeMillis();
 		long timeElapsed = currentTime - startTime, minAge;
 		double timeFraction = 0.2;
-		while (cacheSize > cacheLimit) {
+		while (cacheSize > cacheLimit && timeFraction <= 1) {
 			minAge = (long) (timeElapsed * timeFraction);
 			for (Entry<String, CacheItem> resource : mainCache.entrySet()) {
 				if (resource.getValue().getRecentTimeStamp().getTime()

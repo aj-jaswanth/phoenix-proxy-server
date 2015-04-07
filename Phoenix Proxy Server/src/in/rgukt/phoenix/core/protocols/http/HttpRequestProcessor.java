@@ -30,8 +30,6 @@ public final class HttpRequestProcessor extends
 	private HashMap<String, String> headersMap = new HashMap<String, String>();
 	private String[] initialLineArray;
 	private String[] serverAddress;
-	private HttpHeadersBuilder authorizationHeaders = new HttpHeadersBuilder(
-			Constants.HttpProtocol.defaultAuthenticationHeaders);
 	private HttpErrorHandler httpErrorHandler = new HttpErrorHandler();
 	private String clientAddress;
 	private long dataUploaded = 0, dataDownloaded = 0;
@@ -117,7 +115,6 @@ public final class HttpRequestProcessor extends
 					CacheItem cacheItem = CacheManager
 							.getFromCache(initialLineArray[1]);
 					if (cacheItem != null) {
-						System.out.println("Cache Hit:" + requestedResource);
 						dataDownloaded = cacheItem.getHeaders().length;
 						dataDownloaded += cacheItem.getBody().length;
 						clientOutputStream.write(cacheItem.getHeaders());
@@ -126,7 +123,6 @@ public final class HttpRequestProcessor extends
 					} else {
 						if (connectToServer() == false)
 							return 0;
-						System.out.println("Cache Miss: " + requestedResource);
 						headersMap.remove("Proxy-Authorization");
 						HttpHeadersBuilder headersBuilder = new HttpHeadersBuilder(
 								new String[] { initialLineArray[0] + " "
