@@ -16,6 +16,10 @@ public final class TimeStamp {
 		return getCurrentTime() - secondTimeStamp.getTime();
 	}
 
+	public static long getCurrentDifference(long previousTime) {
+		return getCurrentTime() - previousTime;
+	}
+
 	public static long getCurrentTime() {
 		return System.currentTimeMillis();
 	}

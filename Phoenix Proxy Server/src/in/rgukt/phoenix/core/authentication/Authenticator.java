@@ -33,10 +33,11 @@ public class Authenticator {
 
 	protected synchronized static String isInCache(String str) {
 		AuthenticationCacheItem cacheItem = authenticationCache.get(str);
-		if (cacheItem != null
-				&& (TimeStamp.getCurrentDifference(cacheItem
-						.getCachedTimeStamp()) < Constants.Server.credentialsttl)) {
-			return cacheItem.getUserName();
+		if (cacheItem != null) {
+			if ((TimeStamp.getCurrentDifference(cacheItem.getCachedTimeStamp()) < Constants.Server.credentialsttl))
+				return cacheItem.getUserName();
+			else
+				authenticationCache.remove(str);
 		}
 		return null;
 	}

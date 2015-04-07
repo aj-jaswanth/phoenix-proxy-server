@@ -1,5 +1,7 @@
 package in.rgukt.phoenix.core.logging;
 
+import in.rgukt.phoenix.core.Constants;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -14,8 +16,7 @@ public class FileLogger {
 		if (bufferedWriter == null) {
 			try {
 				bufferedWriter = new BufferedWriter(new FileWriter(
-						System.getProperty("user.home")
-								+ "/Desktop/phoenix.log"));
+						Constants.Server.logFile));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

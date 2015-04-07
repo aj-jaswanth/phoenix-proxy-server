@@ -3,12 +3,14 @@ package in.rgukt.phoenix;
 import in.rgukt.phoenix.core.Constants;
 import in.rgukt.phoenix.core.FileHandler;
 import in.rgukt.phoenix.core.ServerThread;
-import in.rgukt.phoenix.core.ThreadPool;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
 	private static boolean stopServer = false;
@@ -17,9 +19,11 @@ public class Main {
 			InterruptedException, ExecutionException {
 		ServerSocket serverSocket = new ServerSocket(Constants.Server.port);
 		initialize();
+		ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(4, 10,
+				3, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 		while (!stopServer) {
 			Socket client = serverSocket.accept();
-			ThreadPool.execute(new ServerThread(client));
+			threadPoolExecutor.execute(new ServerThread(client));
 		}
 		serverSocket.close();
 	}
@@ -29,5 +33,9 @@ public class Main {
 				.readAsBytes("html/InvalidProtocol.html");
 		Constants.HttpProtocol.ErrorResponses.homePageHtml = FileHandler
 				.readAsBytes("html/HomePage.html");
+		Constants.HttpProtocol.ErrorResponses.quotaExceededHtml = FileHandler
+				.readAsBytes("html/QuotaExceeded.html");
+		Constants.HttpProtocol.ErrorResponses.authenticationRequiredHtml = FileHandler
+				.readAsBytes("html/AuthenticationRequired.html");
 	}
 }

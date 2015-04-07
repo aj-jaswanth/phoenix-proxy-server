@@ -11,13 +11,18 @@ public final class CacheItem {
 	private byte[] body;
 	private long maxAge;
 	private TimeStamp cachedTimeStamp;
+	private int hits;
+	private TimeStamp recentTimeStamp;
+	private long size;
 
 	public CacheItem(CacheCriteria cacheCriteria,
 			Map<String, String> headersMap, byte[] body) {
 		this.cacheCriteria = cacheCriteria;
 		this.headersMap = headersMap;
 		this.body = body;
+		this.size = this.body.length;
 		this.cachedTimeStamp = TimeStamp.getCurrentTimeStamp();
+		this.recentTimeStamp = this.cachedTimeStamp;
 	}
 
 	public CacheItem(CacheCriteria cacheCriteria,
@@ -51,5 +56,22 @@ public final class CacheItem {
 
 	public byte[] getBody() {
 		return body;
+	}
+
+	public long getSize() {
+		return size;
+	}
+
+	public void updateItem() {
+		recentTimeStamp = TimeStamp.getCurrentTimeStamp();
+		hits++;
+	}
+
+	public int getHits() {
+		return hits;
+	}
+
+	public TimeStamp getRecentTimeStamp() {
+		return recentTimeStamp;
 	}
 }
