@@ -9,6 +9,7 @@ import in.rgukt.phoenix.core.logging.FileLogger;
 import in.rgukt.phoenix.core.protocols.ApplicationLayerProtocolProcessor;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReader;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReaderWriter;
+import in.rgukt.phoenix.core.quota.QuotaManager;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -32,11 +33,14 @@ public final class HttpRequestProcessor extends
 	private HttpHeadersBuilder authorizationHeaders = new HttpHeadersBuilder(
 			Constants.HttpProtocol.defaultAuthenticationHeaders);
 	private HttpErrorHandler httpErrorHandler = new HttpErrorHandler();
+	private String clientAddress;
 	private long dataUploaded = 0, dataDownloaded = 0;
+	private String requestedResource;
 
 	public HttpRequestProcessor(Socket clientSocket, ByteBuffer message,
 			BufferedStreamReader bufferedStreamReader) throws IOException {
 		this.clientSocket = clientSocket;
+		this.clientAddress = clientSocket.getInetAddress().getHostAddress();
 		this.clientOutputStream = clientSocket.getOutputStream();
 		this.headers = message;
 		this.body = new ByteBuffer(Constants.HttpProtocol.requestBodyBufferSize);
@@ -97,10 +101,23 @@ public final class HttpRequestProcessor extends
 				String userName = isAuthorized();
 				boolean cacheHit = false;
 				if (userName != null) {
+					if (QuotaManager.isQuotaExceeded(userName)) {
+						httpErrorHandler.sendQuotaExceeded(clientOutputStream);
+						clientSocket.close();
+						return 0;
+					}
+					requestedResource = removePreceedingHostData(initialLineArray[1]);
+					// TODO: ACL
+					// if (AccessController.isAllowed(clientAddress,
+					// getServer(),
+					// requestedResource) == false) {
+					// return 0; // TODO: Access Denied
+					// }
 					dataUploaded = headers.getPosition();
 					CacheItem cacheItem = CacheManager
 							.getFromCache(initialLineArray[1]);
 					if (cacheItem != null) {
+						System.out.println("Cache Hit:" + requestedResource);
 						dataDownloaded = cacheItem.getHeaders().length;
 						dataDownloaded += cacheItem.getBody().length;
 						clientOutputStream.write(cacheItem.getHeaders());
@@ -109,18 +126,16 @@ public final class HttpRequestProcessor extends
 					} else {
 						if (connectToServer() == false)
 							return 0;
-
+						System.out.println("Cache Miss: " + requestedResource);
 						headersMap.remove("Proxy-Authorization");
 						HttpHeadersBuilder headersBuilder = new HttpHeadersBuilder(
-								new String[] { initialLineArray[0]
-										+ " "
-										+ removePreceedingHostData(initialLineArray[1])
-										+ " " + initialLineArray[2] });
+								new String[] { initialLineArray[0] + " "
+										+ requestedResource + " "
+										+ initialLineArray[2] });
 						headersBuilder.addAllHeaders(headersMap);
 						headersBuilder.addHeader("Via: " + "Phoenix");
 						headersBuilder.addHeader("X-Forwarded-For: "
-								+ clientSocket.getInetAddress()
-										.getHostAddress());
+								+ clientAddress);
 						byte[] modifiedHeaders = headersBuilder.getByteArray();
 						serverOutputStream.write(modifiedHeaders, 0,
 								modifiedHeaders.length);
@@ -154,8 +169,8 @@ public final class HttpRequestProcessor extends
 						serverSocket.close();
 					}
 				} else
-					clientOutputStream.write(authorizationHeaders
-							.getByteArray());
+					httpErrorHandler
+							.sendAuthenticationRequired(clientOutputStream);
 				clientSocket.close();
 				FileLogger.logRequest(userName, initialLineArray[1], cacheHit,
 						dataUploaded, dataDownloaded);

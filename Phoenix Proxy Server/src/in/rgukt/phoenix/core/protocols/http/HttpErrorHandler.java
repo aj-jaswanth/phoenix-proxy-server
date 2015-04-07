@@ -43,4 +43,27 @@ public final class HttpErrorHandler {
 		outputStream.write(unknownHostHeaders.getByteArray());
 		outputStream.write(unknownHostHtml);
 	}
+
+	public void sendQuotaExceeded(OutputStream outputStream) throws IOException {
+		HttpHeadersBuilder quotaExceededHeaders = new HttpHeadersBuilder(
+				Constants.HttpProtocol.defaultAcceptHeaders);
+		quotaExceededHeaders
+				.addHeader("Content-Length: "
+						+ Constants.HttpProtocol.ErrorResponses.quotaExceededHtml.length);
+		outputStream.write(quotaExceededHeaders.getByteArray());
+		outputStream
+				.write(Constants.HttpProtocol.ErrorResponses.quotaExceededHtml);
+	}
+
+	public void sendAuthenticationRequired(OutputStream outputStream)
+			throws IOException {
+		HttpHeadersBuilder authenticationHeaders = new HttpHeadersBuilder(
+				Constants.HttpProtocol.defaultAuthenticationHeaders);
+		authenticationHeaders
+				.addHeader("Content-Length: "
+						+ Constants.HttpProtocol.ErrorResponses.authenticationRequiredHtml.length);
+		outputStream.write(authenticationHeaders.getByteArray());
+		outputStream
+				.write(Constants.HttpProtocol.ErrorResponses.authenticationRequiredHtml);
+	}
 }
