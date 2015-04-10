@@ -6,6 +6,7 @@ import in.rgukt.phoenix.core.caching.CacheManager;
 import in.rgukt.phoenix.core.protocols.ApplicationLayerProtocolProcessor;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReader;
 import in.rgukt.phoenix.core.protocols.BufferedStreamReaderWriter;
+import in.rgukt.phoenix.core.quota.QuotaManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,11 +28,14 @@ public final class HttpResponseProcessor extends
 	private HashMap<String, String> headersMap = new HashMap<String, String>();
 	private String[] initialLineArray;
 	private String requestedResource;
+	private String userName;
 	private long dataDownloaded = 0;
+	private HttpErrorHandler httpErrorHandler = new HttpErrorHandler();
 
-	public HttpResponseProcessor(String requestedResource, Socket clientSocket,
+	public HttpResponseProcessor(InfoItem info, Socket clientSocket,
 			Socket serverSocket) throws IOException {
-		this.requestedResource = requestedResource;
+		this.requestedResource = info.getRequestedResource();
+		this.userName = info.getUserName();
 		this.clientSocket = clientSocket;
 		this.serverSocket = serverSocket;
 		this.clientOutputStream = clientSocket.getOutputStream();
@@ -93,11 +97,11 @@ public final class HttpResponseProcessor extends
 				previousHeaderSemiColon = headerSemiColon;
 				break;
 			case HttpResponseStates.headersSectionEnd:
-				clientOutputStream.write(headers.getBuffer(), 0,
-						headers.getPosition());
 				dataDownloaded = headers.getPosition();
 				String lengthHeaderValue = headersMap.get("Content-Length");
 				if (lengthHeaderValue == null) {
+					clientOutputStream.write(headers.getBuffer(), 0,
+							headers.getPosition());
 					String encodingHeaderValue = headersMap
 							.get("Transfer-Encoding");
 					if (encodingHeaderValue != null
@@ -106,6 +110,12 @@ public final class HttpResponseProcessor extends
 					}
 				} else {
 					int len = Integer.parseInt(lengthHeaderValue);
+					if (QuotaManager.getUsedData(userName) + len > Constants.Server.maxUserQuota) {
+						httpErrorHandler.sendQuotaExceeded(clientOutputStream);
+						return 0;
+					}
+					clientOutputStream.write(headers.getBuffer(), 0,
+							headers.getPosition());
 					dataDownloaded += len;
 					BufferedStreamReaderWriter bufferedStreamReaderWriter = new BufferedStreamReaderWriter(
 							clientOutputStream, bufferedStreamReader);

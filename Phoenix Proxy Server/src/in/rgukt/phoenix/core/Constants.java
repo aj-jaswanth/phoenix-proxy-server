@@ -10,7 +10,7 @@ public final class Constants {
 		public static long credentialsUpdateInterval = 2 * 60 * 1000;
 		public static long quotaUpdateInterval = 5 * 60 * 1000;
 		public static long maxUserQuota = 200 << 20;
-		public static String logFile = prefix + "/.phoenix/phoenix.log";
+		public static String logFile = prefix + "/.phoenix/logs/phoenix.log";
 		public static String credentialsFile = prefix + "/.phoenix/credentials";
 		public static String quotaFile = prefix + "/.phoenix/quota";
 		public static long maxLogFileRotateSize = 40 << 20;

@@ -159,7 +159,8 @@ public final class HttpRequestProcessor extends
 						}
 
 						HttpResponseProcessor httpResponseProcessor = new HttpResponseProcessor(
-								initialLineArray[1], clientSocket, serverSocket);
+								new InfoItem(initialLineArray[1], userName),
+								clientSocket, serverSocket);
 						dataDownloaded = httpResponseProcessor
 								.processCompleteMessage();
 						serverSocket.close();

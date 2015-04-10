@@ -21,6 +21,10 @@ public class QuotaManager {
 		}
 	}
 
+	public static long getUsedData(String userName) {
+		return quotaMap.get(userName);
+	}
+
 	public static boolean isQuotaExceeded(String userName) {
 		if (TimeStamp.getCurrentDifference(prevUpdate) > Constants.Server.quotaUpdateInterval)
 			try {
