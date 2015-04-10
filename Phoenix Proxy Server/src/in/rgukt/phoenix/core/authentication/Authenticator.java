@@ -21,10 +21,16 @@ public class Authenticator {
 			case 0:
 				if (c == 'B')
 					state = 1;
+				else if (c == 'C')
+					state = 2;
 				break;
 			case 1:
 				if (c == 'a')
 					return BasicAuthenticator.isValid(str);
+				break;
+			case 2:
+				if (c == 'u')
+					return CustomAuthenticator.isValid(str);
 				break;
 			}
 		}

@@ -208,7 +208,7 @@ public final class HttpRequestProcessor extends
 				length.append((char) b);
 				break;
 			case HttpResponseStates.lengthLineEnd:
-				clientOutputStream.write(body.getBuffer(), prevLengthMarker,
+				serverOutputStream.write(body.getBuffer(), prevLengthMarker,
 						body.getPosition() - prevLengthMarker); // TODO: TCP!
 				int len = Integer.parseInt(length.toString().trim(), 16);
 				dataUploaded += len;
