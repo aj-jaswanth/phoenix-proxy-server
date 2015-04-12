@@ -169,6 +169,7 @@ public final class HttpRequestProcessor extends
 					httpErrorHandler
 							.sendAuthenticationRequired(clientOutputStream);
 				clientSocket.close();
+				QuotaManager.addQuota(userName, dataUploaded + dataDownloaded);
 				FileLogger.logRequest(userName, initialLineArray[1], cacheHit,
 						dataUploaded, dataDownloaded);
 				return dataUploaded;
