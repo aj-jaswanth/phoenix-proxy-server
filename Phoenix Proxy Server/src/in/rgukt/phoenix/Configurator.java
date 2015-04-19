@@ -8,10 +8,13 @@ import java.util.Scanner;
 
 public class Configurator {
 
-	public static void configureServer(String string) {
+	public static void configureServer() {
+		File cfile = new File(Constants.prefix + "configuration");
+		if (cfile.exists() == false)
+			return;
 		Scanner scanner = null;
 		try {
-			scanner = new Scanner(new File(string));
+			scanner = new Scanner(cfile);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			return;
@@ -33,11 +36,11 @@ public class Configurator {
 			case "max_user_quota":
 				Constants.Server.maxUserQuota = parseDataSize(scanner.next());
 				break;
-			case "quota_update_interval":
-				Constants.Server.quotaUpdateInterval = parseTime(scanner.next());
+			case "quota_dump_interval":
+				Constants.Server.quotaDumpInterval = parseTime(scanner.next());
 				break;
-			case "in_memory_max_response_save_size":
-				Constants.HttpProtocol.inMemoryMaxResponseSaveSize = parseDataSize(scanner
+			case "max_cache_item_size":
+				Constants.HttpProtocol.maxCacheItemSize = parseDataSize(scanner
 						.next());
 				break;
 			case "stream_buffer_size":
@@ -53,14 +56,16 @@ public class Configurator {
 						.next());
 				break;
 			case "log_file":
-				Constants.Server.logFile = Constants.prefix + scanner.next();
+				Constants.Server.logFile = scanner.next();
 				break;
 			case "credentials_file":
-				Constants.Server.credentialsFile = Constants.prefix
-						+ scanner.next();
+				Constants.Server.credentialsFile = scanner.next();
 				break;
 			case "quota_file":
-				Constants.Server.quotaFile = Constants.prefix + scanner.next();
+				Constants.Server.quotaFile = scanner.next();
+				break;
+			case "quota_reset_point":
+				Constants.Server.quotaResetPoint = scanner.next();
 				break;
 			default:
 				if (token.charAt(0) != '#') {

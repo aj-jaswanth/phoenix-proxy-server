@@ -119,7 +119,7 @@ public final class HttpResponseProcessor extends
 					dataDownloaded += len;
 					BufferedStreamReaderWriter bufferedStreamReaderWriter = new BufferedStreamReaderWriter(
 							clientOutputStream, bufferedStreamReader);
-					if (len < Constants.HttpProtocol.inMemoryMaxResponseSaveSize) {
+					if (len < Constants.HttpProtocol.maxCacheItemSize) {
 						body.put(bufferedStreamReaderWriter.readWrite(len));
 						CacheManager.inspect(requestedResource, headersMap,
 								body);
