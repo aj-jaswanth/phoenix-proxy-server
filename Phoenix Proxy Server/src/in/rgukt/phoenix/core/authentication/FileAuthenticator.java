@@ -33,6 +33,7 @@ public class FileAuthenticator {
 	}
 
 	private static void updateCredentials() throws FileNotFoundException {
+		credentialsMap.clear();
 		Scanner scanner = new Scanner(
 				new File(Constants.Server.credentialsFile));
 		while (scanner.hasNext()) {

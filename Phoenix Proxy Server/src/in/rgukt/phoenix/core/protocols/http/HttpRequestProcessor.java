@@ -2,6 +2,7 @@ package in.rgukt.phoenix.core.protocols.http;
 
 import in.rgukt.phoenix.core.ByteBuffer;
 import in.rgukt.phoenix.core.Constants;
+import in.rgukt.phoenix.core.access.HttpAccessController;
 import in.rgukt.phoenix.core.authentication.Authenticator;
 import in.rgukt.phoenix.core.caching.CacheItem;
 import in.rgukt.phoenix.core.caching.CacheManager;
@@ -105,12 +106,12 @@ public final class HttpRequestProcessor extends
 						return 0;
 					}
 					requestedResource = removePreceedingHostData(initialLineArray[1]);
-					// TODO: ACL
-					// if (AccessController.isAllowed(clientAddress,
-					// getServer(),
-					// requestedResource) == false) {
-					// return 0; // TODO: Access Denied
-					// }
+					if (HttpAccessController.isAllowed(clientAddress,
+							getServer(), getPort(), requestedResource) == false) {
+						clientOutputStream
+								.write(Constants.HttpProtocol.ErrorResponses.accessDeniedHtml);
+						return 0;
+					}
 					dataUploaded = headers.getPosition();
 					CacheItem cacheItem = CacheManager
 							.getFromCache(initialLineArray[1]);
@@ -296,6 +297,7 @@ public final class HttpRequestProcessor extends
 		// Otherwise proxy server recursively connects to itself
 		// draining resources.
 
+		// TODO: Check HTTP Host
 		if (clientSocket.getInetAddress().isLoopbackAddress()
 				&& (getPort() == Constants.Server.port)) {
 			httpErrorHandler.sendHomePage(clientOutputStream);

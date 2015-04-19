@@ -9,7 +9,7 @@ public final class Constants {
 		public static int port = 3128;
 		public static long credentialsttl = 2 * 60 * 1000;
 		public static long credentialsUpdateInterval = 2 * 60 * 1000;
-		public static long quotaDumpInterval = 10 * 1000;
+		public static long quotaDumpInterval = 5 * 60 * 1000;
 		public static String quotaResetPoint = "00:00";
 		public static String quotasDir = prefix + "/quotas/";
 		public static String quotaResetPointFile = prefix
@@ -19,6 +19,7 @@ public final class Constants {
 		public static String credentialsFile = prefix + "credentials";
 		public static String quotaFile = prefix + "/quotas/quota";
 		public static long maxLogFileRotateSize = 1 << 20;
+		public static long aclUpdateInterval = 10 * 1000;
 	}
 
 	public static final class HttpProtocol {
@@ -27,6 +28,7 @@ public final class Constants {
 			public static byte[] homePageHtml;
 			public static byte[] quotaExceededHtml;
 			public static byte[] authenticationRequiredHtml;
+			public static byte[] accessDeniedHtml;
 		}
 
 		public static final String[] methods = { "GET", "HEAD", "POST",
@@ -47,5 +49,6 @@ public final class Constants {
 				"Server: " + Constants.Server.name, "Content-Type: text/html",
 				"Proxy-Connection: keep-alive",
 				"Proxy-Authenticate: Basic realm=\"Phoenix Proxy Server\"" };
+		public static String aclFile = prefix + "acl";
 	}
 }

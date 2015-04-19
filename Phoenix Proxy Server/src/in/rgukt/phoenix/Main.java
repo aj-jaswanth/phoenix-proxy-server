@@ -42,5 +42,7 @@ public class Main {
 				.readAsBytes("html/QuotaExceeded.html");
 		Constants.HttpProtocol.ErrorResponses.authenticationRequiredHtml = FileHandler
 				.readAsBytes("html/AuthenticationRequired.html");
+		Constants.HttpProtocol.ErrorResponses.accessDeniedHtml = FileHandler
+				.readAsBytes("html/AccessDenied.html");
 	}
 }
