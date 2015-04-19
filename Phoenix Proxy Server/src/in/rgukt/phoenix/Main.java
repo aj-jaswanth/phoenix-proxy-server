@@ -4,6 +4,7 @@ import in.rgukt.phoenix.core.Constants;
 import in.rgukt.phoenix.core.FileHandler;
 import in.rgukt.phoenix.core.ServerThread;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -17,8 +18,10 @@ public class Main {
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException, ExecutionException {
-		if (args.length == 1)
-			Configurator.configureServer(args[0]);
+		if (args.length == 1) {
+			Constants.prefix = args[0] + File.separator;
+			Configurator.configureServer();
+		}
 		ServerSocket serverSocket = new ServerSocket(Constants.Server.port);
 		initialize();
 		ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(4, 10,

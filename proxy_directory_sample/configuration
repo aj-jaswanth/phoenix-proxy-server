@@ -1,0 +1,42 @@
+# configuration file for the Phoenix Proxy Server
+# all times are represented in hh:mm:ss
+# all data sizes are represented as KB, MB, GB, TB etc.,
+
+# port for the proxy server
+port 3128
+
+# log file path
+log_file /home/aj/.phoenix/logs/phoenix.log
+
+# credentials file path
+credentials_file /home/aj/.phoenix/credentials
+
+# quota file path
+quota_file /home/aj/.phoenix/quotas/quota
+
+# quota reset point
+quota_reset_point 00:00:00
+
+# maximum server cache size
+max_cache_size 100MB
+
+# maximum amount of file to cache
+max_cache_item_size 10MB
+
+# time to cache the credentials
+credentials_ttl 00:05:00
+
+# credentials update interval
+credentials_update_interval 00:10:00
+
+# maximum user quota per day
+max_user_quota 200MB
+
+# quota dump interval
+quota_dump_interval 00:05:00
+
+# stream buffer size
+stream_buffer_size 64KB
+
+# maximum single log file size. After reaching this limit another file will be created
+max_log_file_rotate_size 40MB
