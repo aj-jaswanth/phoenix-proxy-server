@@ -67,6 +67,9 @@ public class Configurator {
 			case "quota_reset_point":
 				Constants.Server.quotaResetPoint = scanner.next();
 				break;
+			case "acl_update_interval":
+				Constants.Server.aclUpdateInterval = parseTime(scanner.next());
+				break;
 			default:
 				if (token.charAt(0) != '#') {
 					System.err.println("Invalid configuration line : " + token);

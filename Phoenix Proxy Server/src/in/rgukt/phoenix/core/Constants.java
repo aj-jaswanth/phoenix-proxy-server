@@ -19,7 +19,7 @@ public final class Constants {
 		public static String credentialsFile = prefix + "credentials";
 		public static String quotaFile = prefix + "/quotas/quota";
 		public static long maxLogFileRotateSize = 1 << 20;
-		public static long aclUpdateInterval = 10 * 1000;
+		public static long aclUpdateInterval = 5 * 60 * 1000;
 	}
 
 	public static final class HttpProtocol {

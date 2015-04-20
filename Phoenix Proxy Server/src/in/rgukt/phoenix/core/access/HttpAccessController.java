@@ -5,13 +5,12 @@ import in.rgukt.phoenix.core.TimeStamp;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 public class HttpAccessController {
 
 	private static TimeStamp prevUpdate = TimeStamp.getCurrentTimeStamp();
-	private static ArrayList<String> aclList = new ArrayList<String>();
+	private static AclNode root;
 
 	static {
 		try {
@@ -33,12 +32,12 @@ public class HttpAccessController {
 				e.printStackTrace();
 			}
 		}
-		return isInAclList(server + requestedResource);
+		return isInAclList(server);
 	}
 
 	private synchronized static void updateAclList()
 			throws FileNotFoundException {
-		aclList.clear();
+		root = null;
 		File aclFile = new File(Constants.HttpProtocol.aclFile);
 		Scanner scanner = new Scanner(aclFile);
 		while (scanner.hasNext())
@@ -47,13 +46,61 @@ public class HttpAccessController {
 	}
 
 	private static void addToAclList(String str) {
-		aclList.add(str);
+		int x = str.length() - 1;
+		AclNode temp;
+		if (root == null) {
+			root = new AclNode(str.charAt(x--));
+			temp = root;
+		} else if (root.data == str.charAt(x)) {
+			x--;
+			temp = root;
+		} else {
+			AclNode n = null;
+			char c = str.charAt(x--);
+			if (root.isJunction)
+				n = root.junction.get(c);
+			if (n == null) {
+				n = new AclNode(c);
+				root.addToJunction(n);
+			}
+			temp = n;
+		}
+
+		for (; x >= 0; x--) {
+			char c = str.charAt(x);
+			if (temp.child == null) {
+				temp.child = new AclNode(c);
+				temp = temp.child;
+			} else if (temp.child.data == c) {
+				temp = temp.child;
+				continue;
+			} else {
+				AclNode n = new AclNode(c);
+				temp.child.addToJunction(n);
+				temp = n;
+			}
+		}
 	}
 
 	private static boolean isInAclList(String res) {
-		for (String str : aclList)
-			if (res.matches(str))
+		if (root == null)
+			return false;
+		AclNode temp = root;
+		int x = res.length() - 1;
+		for (; x >= 0; x--) {
+			char c = res.charAt(x);
+			if (temp.isJunction)
+				temp = temp.junction.get(c);
+			if (temp == null)
+				break;
+			else if (temp.data == c) {
+				temp = temp.child;
+				continue;
+			} else if (temp.data == '*')
 				return true;
-		return false;
+			else
+				break;
+		}
+		return x == -1 && temp == null;
 	}
 }
