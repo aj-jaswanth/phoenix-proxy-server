@@ -8,6 +8,8 @@ import java.util.HashMap;
 public class Authenticator {
 
 	protected static HashMap<String, AuthenticationCacheItem> authenticationCache = new HashMap<String, AuthenticationCacheItem>();
+	private static char[] hexMap = { '0', '1', '2', '3', '4', '5', '6', '7',
+			'8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
 	public static String isValid(String str) {
 		String userName = isInCache(str);
@@ -51,5 +53,16 @@ public class Authenticator {
 	protected synchronized static void addToAuthenticationCache(String str,
 			AuthenticationCacheItem authenticationCacheItem) {
 		authenticationCache.put(str, authenticationCacheItem);
+	}
+
+	protected static String getHexRepresentation(byte[] array) {
+		StringBuffer sb = new StringBuffer();
+		char c;
+		for (byte b : array) {
+			c = (char) b;
+			sb.append(hexMap[(c & 0xf0) >> 4]);
+			sb.append(hexMap[c & 0x0f]);
+		}
+		return sb.toString();
 	}
 }
