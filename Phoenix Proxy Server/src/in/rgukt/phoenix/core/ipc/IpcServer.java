@@ -1,8 +1,10 @@
 package in.rgukt.phoenix.core.ipc;
 
+import in.rgukt.phoenix.Configurator;
 import in.rgukt.phoenix.core.Constants;
 import in.rgukt.phoenix.core.access.HttpAccessController;
 import in.rgukt.phoenix.core.authentication.Authenticator;
+import in.rgukt.phoenix.core.quota.QuotaManager;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -30,19 +32,24 @@ public class IpcServer implements Runnable {
 		String[] a = cmd.split(":");
 		switch (a[0]) {
 		case "A":
-			if (a[1].equals("CRED"))
+			if (a[1].equals("CRD"))
 				Authenticator.addUser(a[2], a[3]);
 			else if (a[1].equals("ACL"))
 				HttpAccessController.addToAclList(a[2]);
+			else if (a[1].equals("QTA"))
+				QuotaManager.addQuotaLimit(a[2],
+						Configurator.parseDataSize((a[3])));
 			break;
 		case "R":
-			if (a[1].equals("CRED"))
+			if (a[1].equals("CRD"))
 				Authenticator.removeUser(a[2]);
 			else if (a[1].equals("ACL"))
 				HttpAccessController.removeFromAclList(a[2]);
+			else if (a[1].equals("QTA"))
+				QuotaManager.removeQuotaLimit(a[2]);
 			break;
 		case "U":
-			if (a[1].equals("CRED"))
+			if (a[1].equals("CRD"))
 				Authenticator.updateUser(a[2], a[3]);
 			break;
 		}

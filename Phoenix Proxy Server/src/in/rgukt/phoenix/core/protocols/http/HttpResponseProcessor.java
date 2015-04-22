@@ -110,7 +110,7 @@ public final class HttpResponseProcessor extends
 					}
 				} else {
 					int len = Integer.parseInt(lengthHeaderValue);
-					if (QuotaManager.getUsedData(userName) + len > Constants.Server.maxUserQuota) {
+					if (QuotaManager.exceedsQuotaLimit(userName, len)) {
 						httpErrorHandler.sendQuotaExceeded(clientOutputStream);
 						return 0;
 					}

@@ -16,10 +16,10 @@ public final class Constants {
 		public static String quotasDir = prefix + "/quotas/";
 		public static String quotaResetPointFile = prefix
 				+ "/quotas/next_reset_point";
-		public static long maxUserQuota = 200 << 20;
 		public static String logFile = prefix + "/logs/phoenix.log";
 		public static String credentialsFile = prefix + "credentials";
 		public static String quotaFile = prefix + "/quotas/quota";
+		public static String quotaLimitsFile = prefix + "/quotaLimits";
 		public static long maxLogFileRotateSize = 1 << 20;
 	}
 
@@ -41,7 +41,7 @@ public final class Constants {
 		public static final int responseBodyBufferSize = 64 << 10;
 		public static int streamBufferSize = 64 << 10;
 		public static long maxCacheItemSize = 5 << 20;
-		public static long maxCacheSize = 1 << 15;
+		public static long maxCacheSize = 200 << 20;
 		public static final String[] defaultAcceptHeaders = new String[] {
 				"HTTP/1.1 200 OK", "Server: " + Constants.Server.name,
 				"Content-Type: text/html", "Proxy-Connection: keep-alive" };

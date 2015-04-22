@@ -1,5 +1,6 @@
 package in.rgukt.phoenix.core.quota;
 
+import in.rgukt.phoenix.Configurator;
 import in.rgukt.phoenix.core.Constants;
 import in.rgukt.phoenix.core.TimeStamp;
 
@@ -16,12 +17,14 @@ import java.util.Scanner;
 public class QuotaManager {
 
 	private static Map<String, Long> quotaMap = new HashMap<String, Long>();
+	private static Map<String, Long> quotaLimits = new HashMap<String, Long>();
 	private static TimeStamp prevUpdate = TimeStamp.getCurrentTimeStamp();
 	private static Calendar resetPoint;
 
 	static {
 		try {
 			updateQuotaFromFile();
+			updateQuotaLimitsFromFile();
 			File r = new File(Constants.Server.quotaResetPointFile);
 			Scanner s = new Scanner(r);
 			resetPoint = Calendar.getInstance();
@@ -44,16 +47,29 @@ public class QuotaManager {
 		}
 	}
 
-	public synchronized static long getUsedData(String userName) {
-		return quotaMap.get(userName);
+	public synchronized static boolean exceedsQuotaLimit(String userName,
+			long len) {
+		return quotaMap.get(userName) > quotaLimits.get(userName);
 	}
 
 	public synchronized static boolean isQuotaExceeded(String userName) {
 		Long quota = quotaMap.get(userName);
-		if (quota != null)
-			return quota > Constants.Server.maxUserQuota;
+		if (quota != null) {
+			Long limit = quotaLimits.get(userName);
+			if (limit == null)
+				return true;
+			return quota > limit;
+		}
 		quotaMap.put(userName, 0L);
 		return false;
+	}
+
+	public static void addQuotaLimit(String userName, long limit) {
+		quotaLimits.put(userName, limit);
+	}
+
+	public static void removeQuotaLimit(String userName) {
+		quotaLimits.remove(userName);
 	}
 
 	private static void dumpQuotaToFile() throws IOException {
@@ -65,9 +81,18 @@ public class QuotaManager {
 
 	private static void updateQuotaFromFile() throws FileNotFoundException {
 		Scanner scanner = new Scanner(new File(Constants.Server.quotaFile));
-		while (scanner.hasNext()) {
+		while (scanner.hasNext())
 			quotaMap.put(scanner.next(), scanner.nextLong());
-		}
+		scanner.close();
+	}
+
+	private static void updateQuotaLimitsFromFile()
+			throws FileNotFoundException {
+		Scanner scanner = new Scanner(
+				new File(Constants.Server.quotaLimitsFile));
+		while (scanner.hasNext())
+			quotaLimits.put(scanner.next(),
+					Configurator.parseDataSize(scanner.next()));
 		scanner.close();
 	}
 

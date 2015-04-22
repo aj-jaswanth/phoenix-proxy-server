@@ -26,9 +26,6 @@ public class Configurator {
 			case "proxy_server_port":
 				Constants.Server.port = scanner.nextInt();
 				break;
-			case "max_user_quota":
-				Constants.Server.maxUserQuota = parseDataSize(scanner.next());
-				break;
 			case "quota_dump_interval":
 				Constants.Server.quotaDumpInterval = parseTime(scanner.next());
 				break;
@@ -75,7 +72,7 @@ public class Configurator {
 		scanner.close();
 	}
 
-	private static long parseTime(String time) {
+	public static long parseTime(String time) {
 		int fistColon = time.indexOf(':');
 		int secondColon = time.indexOf(':', fistColon + 1);
 		int hours = Integer.parseInt(time.substring(0, fistColon));
@@ -86,7 +83,7 @@ public class Configurator {
 		return milliseconds;
 	}
 
-	private static long parseDataSize(String dataSize) {
+	public static long parseDataSize(String dataSize) {
 		int len = dataSize.length();
 		long size = Integer.parseInt(dataSize.substring(0, len - 2));
 		switch (dataSize.substring(len - 2, len)) {

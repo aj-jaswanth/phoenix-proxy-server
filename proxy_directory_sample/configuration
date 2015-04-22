@@ -26,9 +26,6 @@ max_cache_size 100MB
 # maximum amount of file to cache
 max_cache_item_size 10MB
 
-# maximum user quota per day
-max_user_quota 200MB
-
 # quota dump interval
 quota_dump_interval 00:05:00
 
