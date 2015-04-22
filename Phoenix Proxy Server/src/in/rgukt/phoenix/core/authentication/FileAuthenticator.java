@@ -1,7 +1,6 @@
 package in.rgukt.phoenix.core.authentication;
 
 import in.rgukt.phoenix.core.Constants;
-import in.rgukt.phoenix.core.TimeStamp;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,7 +11,7 @@ import java.util.Scanner;
 public class FileAuthenticator {
 
 	private static Map<String, String> credentialsMap = new HashMap<String, String>();
-	private static TimeStamp prevUpdate = TimeStamp.getCurrentTimeStamp();
+
 	static {
 		try {
 			updateCredentials();
@@ -21,14 +20,15 @@ public class FileAuthenticator {
 		}
 	}
 
+	static void removeUser(String userName) {
+		credentialsMap.remove(userName);
+	}
+
+	static void addUser(String userName, String passwordHash) {
+		credentialsMap.put(userName, passwordHash);
+	}
+
 	public static String getPassword(String string) {
-		if (TimeStamp.getCurrentDifference(prevUpdate) > Constants.Server.credentialsUpdateInterval)
-			try {
-				updateCredentials();
-				prevUpdate = TimeStamp.getCurrentTimeStamp();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
 		return credentialsMap.get(string);
 	}
 

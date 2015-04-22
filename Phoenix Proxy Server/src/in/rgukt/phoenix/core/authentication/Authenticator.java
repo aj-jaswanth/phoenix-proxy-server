@@ -1,15 +1,32 @@
 package in.rgukt.phoenix.core.authentication;
 
-import in.rgukt.phoenix.core.Constants;
-import in.rgukt.phoenix.core.TimeStamp;
-
 import java.util.HashMap;
+import java.util.Map.Entry;
 
 public class Authenticator {
 
-	protected static HashMap<String, AuthenticationCacheItem> authenticationCache = new HashMap<String, AuthenticationCacheItem>();
+	protected static HashMap<String, String> authenticationCache = new HashMap<String, String>();
 	private static char[] hexMap = { '0', '1', '2', '3', '4', '5', '6', '7',
 			'8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+
+	public static void removeUser(String userName) {
+		FileAuthenticator.removeUser(userName);
+		for (Entry<String, String> entry : authenticationCache.entrySet()) {
+			if (entry.getValue().equals(userName)) {
+				authenticationCache.remove(entry.getKey());
+				break;
+			}
+		}
+	}
+
+	public static void updateUser(String userName, String passwordHash) {
+		removeUser(userName);
+		addUser(userName, passwordHash);
+	}
+
+	public static void addUser(String userName, String passwordHash) {
+		FileAuthenticator.addUser(userName, passwordHash);
+	}
 
 	public static String isValid(String str) {
 		String userName = isInCache(str);
@@ -40,19 +57,13 @@ public class Authenticator {
 	}
 
 	protected synchronized static String isInCache(String str) {
-		AuthenticationCacheItem cacheItem = authenticationCache.get(str);
-		if (cacheItem != null) {
-			if ((TimeStamp.getCurrentDifference(cacheItem.getCachedTimeStamp()) < Constants.Server.credentialsttl))
-				return cacheItem.getUserName();
-			else
-				authenticationCache.remove(str);
-		}
-		return null;
+		String user = authenticationCache.get(str);
+		return user;
 	}
 
 	protected synchronized static void addToAuthenticationCache(String str,
-			AuthenticationCacheItem authenticationCacheItem) {
-		authenticationCache.put(str, authenticationCacheItem);
+			String user) {
+		authenticationCache.put(str, user);
 	}
 
 	protected static String getHexRepresentation(byte[] array) {

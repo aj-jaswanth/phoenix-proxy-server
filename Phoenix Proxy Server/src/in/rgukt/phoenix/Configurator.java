@@ -23,15 +23,8 @@ public class Configurator {
 		while (scanner.hasNext()) {
 			token = scanner.next();
 			switch (token) {
-			case "port":
+			case "proxy_server_port":
 				Constants.Server.port = scanner.nextInt();
-				break;
-			case "credentials_ttl":
-				Constants.Server.credentialsttl = parseTime(scanner.next());
-				break;
-			case "credentials_update_interval":
-				Constants.Server.credentialsUpdateInterval = parseTime(scanner
-						.next());
 				break;
 			case "max_user_quota":
 				Constants.Server.maxUserQuota = parseDataSize(scanner.next());
@@ -67,8 +60,8 @@ public class Configurator {
 			case "quota_reset_point":
 				Constants.Server.quotaResetPoint = scanner.next();
 				break;
-			case "acl_update_interval":
-				Constants.Server.aclUpdateInterval = parseTime(scanner.next());
+			case "ipc_server_port":
+				Constants.IPCServer.port = scanner.nextInt();
 				break;
 			default:
 				if (token.charAt(0) != '#') {

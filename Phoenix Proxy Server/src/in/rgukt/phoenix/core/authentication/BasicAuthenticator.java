@@ -1,6 +1,5 @@
 package in.rgukt.phoenix.core.authentication;
 
-import in.rgukt.phoenix.core.TimeStamp;
 import in.rgukt.phoenix.core.authentication.decoders.Base64;
 
 import java.security.MessageDigest;
@@ -23,8 +22,7 @@ public final class BasicAuthenticator extends Authenticator {
 				e.printStackTrace();
 			}
 			if (s != null && s.equals(hashedPassword)) {
-				addToAuthenticationCache(str, new AuthenticationCacheItem(a[0],
-						TimeStamp.getCurrentTimeStamp()));
+				addToAuthenticationCache(str, a[0]);
 				return a[0];
 			}
 		}

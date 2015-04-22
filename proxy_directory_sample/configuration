@@ -2,8 +2,11 @@
 # all times are represented in hh:mm:ss
 # all data sizes are represented as KB, MB, GB, TB etc.,
 
-# port for the proxy server
-port 3128
+# port for proxy server
+proxy_server_port 3128
+
+# port for IPC server
+ipc_server_port 9090
 
 # log file path
 log_file /home/aj/.phoenix/logs/phoenix.log
@@ -22,12 +25,6 @@ max_cache_size 100MB
 
 # maximum amount of file to cache
 max_cache_item_size 10MB
-
-# time to cache the credentials
-credentials_ttl 00:05:00
-
-# credentials update interval
-credentials_update_interval 00:10:00
 
 # maximum user quota per day
 max_user_quota 200MB

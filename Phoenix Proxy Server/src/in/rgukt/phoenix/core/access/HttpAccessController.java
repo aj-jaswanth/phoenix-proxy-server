@@ -1,7 +1,6 @@
 package in.rgukt.phoenix.core.access;
 
 import in.rgukt.phoenix.core.Constants;
-import in.rgukt.phoenix.core.TimeStamp;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,7 +8,6 @@ import java.util.Scanner;
 
 public class HttpAccessController {
 
-	private static TimeStamp prevUpdate = TimeStamp.getCurrentTimeStamp();
 	private static AclNode root;
 
 	static {
@@ -24,14 +22,6 @@ public class HttpAccessController {
 			int port, String requestedResource) {
 		if (port != 80)
 			return false;
-		if (TimeStamp.getCurrentDifference(prevUpdate) > Constants.Server.aclUpdateInterval) {
-			prevUpdate = TimeStamp.getCurrentTimeStamp();
-			try {
-				updateAclList();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-		}
 		return isInAclList(server);
 	}
 
@@ -45,7 +35,7 @@ public class HttpAccessController {
 		scanner.close();
 	}
 
-	private static void addToAclList(String str) {
+	public static void addToAclList(String str) {
 		int x = str.length() - 1;
 		AclNode temp;
 		if (root == null) {
@@ -79,6 +69,36 @@ public class HttpAccessController {
 				temp.child.addToJunction(n);
 				temp = n;
 			}
+		}
+	}
+
+	public static void removeFromAclList(String res) {
+		if (root == null)
+			return;
+		AclNode temp = root;
+		int x = res.length() - 1;
+		AclNode lastJunction = null;
+		char lastChar = 0;
+		for (; x >= 0; x--) {
+			char c = res.charAt(x);
+			if (temp.isJunction) {
+				lastJunction = temp;
+				temp = temp.junction.get(c);
+				lastChar = c;
+			}
+			if (temp == null)
+				break;
+			else if (temp.data == c) {
+				temp = temp.child;
+				continue;
+			} else
+				break;
+		}
+		if (x == -1 && temp == null) {
+			if (lastJunction != null)
+				lastJunction.junction.remove(lastChar);
+			else
+				root = null;
 		}
 	}
 

@@ -4,11 +4,13 @@ public final class Constants {
 	public static String prefix = System.getProperty("user.home")
 			+ "/.phoenix/";
 
+	public static final class IPCServer {
+		public static int port = 9090;
+	}
+
 	public static final class Server {
 		public static final String name = "Phoenix Proxy Server";
 		public static int port = 3128;
-		public static long credentialsttl = 2 * 60 * 1000;
-		public static long credentialsUpdateInterval = 2 * 60 * 1000;
 		public static long quotaDumpInterval = 5 * 60 * 1000;
 		public static String quotaResetPoint = "00:00";
 		public static String quotasDir = prefix + "/quotas/";
@@ -19,7 +21,6 @@ public final class Constants {
 		public static String credentialsFile = prefix + "credentials";
 		public static String quotaFile = prefix + "/quotas/quota";
 		public static long maxLogFileRotateSize = 1 << 20;
-		public static long aclUpdateInterval = 5 * 60 * 1000;
 	}
 
 	public static final class HttpProtocol {

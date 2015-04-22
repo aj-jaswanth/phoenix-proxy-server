@@ -1,7 +1,5 @@
 package in.rgukt.phoenix.core.authentication;
 
-import in.rgukt.phoenix.core.TimeStamp;
-
 import javax.xml.bind.DatatypeConverter;
 
 public class CustomAuthenticator extends Authenticator {
@@ -14,8 +12,7 @@ public class CustomAuthenticator extends Authenticator {
 		String receivedHash = array[1];
 		String passwordHash = FileAuthenticator.getPassword(userName);
 		if (passwordHash.equals(receivedHash)) {
-			addToAuthenticationCache(str, new AuthenticationCacheItem(userName,
-					TimeStamp.getCurrentTimeStamp()));
+			addToAuthenticationCache(str, userName);
 			return userName;
 		}
 		return null;

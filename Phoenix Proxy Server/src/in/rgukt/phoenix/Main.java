@@ -3,6 +3,7 @@ package in.rgukt.phoenix;
 import in.rgukt.phoenix.core.Constants;
 import in.rgukt.phoenix.core.FileHandler;
 import in.rgukt.phoenix.core.ServerThread;
+import in.rgukt.phoenix.core.ipc.IpcServer;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +23,10 @@ public class Main {
 			Constants.prefix = args[0] + File.separator;
 			Configurator.configureServer();
 		}
+
+		Thread IpcThread = new Thread(new IpcServer());
+		IpcThread.start();
+
 		ServerSocket serverSocket = new ServerSocket(Constants.Server.port);
 		initialize();
 		ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(4, 10,
