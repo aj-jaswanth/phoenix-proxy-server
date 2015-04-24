@@ -1,16 +1,37 @@
 package in.rgukt.phoenix.core;
 
+/**
+ * This class is like the database of the entire proxy server. It holds all
+ * configuration details and internal parameters for the proxy server.
+ * 
+ * @author Venkata Jaswanth
+ */
 public final class Constants {
+	/**
+	 * Path for the proxy server's home folder.
+	 */
 	public static String prefix = System.getProperty("user.home")
 			+ "/.phoenix/";
 
+	/**
+	 * This class holds IPCServer details.
+	 * 
+	 * @author Venkata Jaswanth
+	 */
 	public static final class IPCServer {
 		public static int port = 9090;
 	}
 
+	/**
+	 * This class holds details about proxy server's file paths and other
+	 * parameters
+	 * 
+	 * @author Venkata Jaswanth
+	 */
 	public static final class Server {
 		public static final String name = "Phoenix Proxy Server";
 		public static int port = 3128;
+		public static int maxConcurrentThreads = 4;
 		public static long quotaDumpInterval = 5 * 60 * 1000;
 		public static String quotaResetPoint = "00:00";
 		public static String quotasDir = prefix + "/quotas/";
@@ -23,10 +44,15 @@ public final class Constants {
 		public static long maxLogFileRotateSize = 1 << 20;
 	}
 
+	/**
+	 * This class holds all configuration of HTTP Protocol.
+	 */
 	public static final class HttpProtocol {
+		/**
+		 * Holds all error responses HTML documents.
+		 */
 		public static final class ErrorResponses {
 			public static byte[] invalidProtocolHtml;
-			public static byte[] homePageHtml;
 			public static byte[] quotaExceededHtml;
 			public static byte[] authenticationRequiredHtml;
 			public static byte[] accessDeniedHtml;

@@ -18,6 +18,11 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 
+/**
+ * This class processes the complete HTTP request
+ * 
+ * @author Venkata Jaswanth
+ */
 public final class HttpRequestProcessor extends
 		ApplicationLayerProtocolProcessor {
 
@@ -95,8 +100,6 @@ public final class HttpRequestProcessor extends
 				previousHeaderSemiColon = headerSemiColon;
 				break;
 			case HttpRequestStates.headersSectionEnd:
-				if (checkSelfConnection() == true)
-					return 0;
 				String userName = isAuthorized();
 				boolean cacheHit = false;
 				if (userName != null) {
@@ -108,8 +111,8 @@ public final class HttpRequestProcessor extends
 					requestedResource = removePreceedingHostData(initialLineArray[1]);
 					if (HttpAccessController.isAllowed(clientAddress,
 							getServer(), getPort(), requestedResource) == false) {
-						clientOutputStream
-								.write(Constants.HttpProtocol.ErrorResponses.accessDeniedHtml);
+						httpErrorHandler.sendAccessDenied(clientOutputStream);
+						clientSocket.close();
 						return 0;
 					}
 					dataUploaded = headers.getPosition();
@@ -212,7 +215,7 @@ public final class HttpRequestProcessor extends
 				break;
 			case HttpResponseStates.lengthLineEnd:
 				serverOutputStream.write(body.getBuffer(), prevLengthMarker,
-						body.getPosition() - prevLengthMarker); // TODO: TCP!
+						body.getPosition() - prevLengthMarker);
 				int len = Integer.parseInt(length.toString().trim(), 16);
 				dataUploaded += len;
 				length = new StringBuilder();
@@ -290,20 +293,6 @@ public final class HttpRequestProcessor extends
 				return userName;
 		}
 		return null;
-	}
-
-	private boolean checkSelfConnection() throws IOException {
-		// Defense against denial-of-service class attack.
-		// Otherwise proxy server recursively connects to itself
-		// draining resources.
-
-		// TODO: Check HTTP Host
-		if (clientSocket.getInetAddress().isLoopbackAddress()
-				&& (getPort() == Constants.Server.port)) {
-			httpErrorHandler.sendHomePage(clientOutputStream);
-			return true;
-		}
-		return false;
 	}
 
 	private boolean connectToServer() throws IOException {

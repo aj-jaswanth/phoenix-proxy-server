@@ -3,12 +3,24 @@ package in.rgukt.phoenix.core.authentication;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+/**
+ * Base authenticator class. This identifies the authentication scheme used and
+ * acts accordingly.
+ * 
+ * @author Venkata Jaswanth
+ */
+
 public class Authenticator {
 
 	protected static HashMap<String, String> authenticationCache = new HashMap<String, String>();
 	private static char[] hexMap = { '0', '1', '2', '3', '4', '5', '6', '7',
 			'8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
+	/**
+	 * Remove user from users list
+	 * 
+	 * @param userName
+	 */
 	public static void removeUser(String userName) {
 		FileAuthenticator.removeUser(userName);
 		for (Entry<String, String> entry : authenticationCache.entrySet()) {
@@ -19,15 +31,34 @@ public class Authenticator {
 		}
 	}
 
+	/**
+	 * Update user's password
+	 * 
+	 * @param userName
+	 * @param passwordHash
+	 */
 	public static void updateUser(String userName, String passwordHash) {
 		removeUser(userName);
 		addUser(userName, passwordHash);
 	}
 
+	/**
+	 * Add new user
+	 * 
+	 * @param userName
+	 * @param passwordHash
+	 */
 	public static void addUser(String userName, String passwordHash) {
 		FileAuthenticator.addUser(userName, passwordHash);
 	}
 
+	/**
+	 * Return whether the given authentication identifier is valid or not.
+	 * 
+	 * @param str
+	 *            Authentication identifier
+	 * @return Returns the username found from the identifier.
+	 */
 	public static String isValid(String str) {
 		String userName = isInCache(str);
 		if (userName != null)

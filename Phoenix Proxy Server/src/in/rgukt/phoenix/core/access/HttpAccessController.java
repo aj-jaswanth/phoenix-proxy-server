@@ -6,6 +6,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
+/**
+ * This class handles all access control mechanisms. It currently supports
+ * domain based access control only. It supports regular expression * in domain
+ * names to indicate anything. eg., www.google.com, *.google.com. This uses a
+ * Trie based algorithm to support decision making and allowing regular
+ * expressions. This is faster than a HashTable.
+ * 
+ * @author Venkata Jaswanth
+ */
+
 public class HttpAccessController {
 
 	private static AclNode root;
@@ -18,6 +28,15 @@ public class HttpAccessController {
 		}
 	}
 
+	/**
+	 * Determines whether the current request is allowed or not.
+	 * 
+	 * @param clientAddress
+	 * @param server
+	 * @param port
+	 * @param requestedResource
+	 * @return true if allowed or false if denied
+	 */
 	public static boolean isAllowed(String clientAddress, String server,
 			int port, String requestedResource) {
 		if (port != 80)
@@ -35,36 +54,46 @@ public class HttpAccessController {
 		scanner.close();
 	}
 
-	public static void addToAclList(String str) {
-		int x = str.length() - 1;
+	/**
+	 * Adds the given domain to the list of allowed sites.
+	 * 
+	 * @param domainName
+	 *            domain name
+	 */
+	public static void addToAclList(String domainName) {
+		int x = domainName.length() - 1;
 		AclNode temp;
 		if (root == null) {
-			root = new AclNode(str.charAt(x--));
+			root = new AclNode(domainName.charAt(x--));
 			temp = root;
-		} else if (root.data == str.charAt(x)) {
+		} else if (root.data == domainName.charAt(x)) {
 			x--;
 			temp = root;
-		} else {
-			AclNode n = null;
-			char c = str.charAt(x--);
+		} else if (root.data == '*')
+			return;
+		else {
+			AclNode node = null;
+			char c = domainName.charAt(x--);
 			if (root.isJunction)
-				n = root.junction.get(c);
-			if (n == null) {
-				n = new AclNode(c);
-				root.addToJunction(n);
+				node = root.junction.get(c);
+			if (node == null) {
+				node = new AclNode(c);
+				root.addToJunction(node);
 			}
-			temp = n;
+			temp = node;
 		}
 
 		for (; x >= 0; x--) {
-			char c = str.charAt(x);
+			char c = domainName.charAt(x);
 			if (temp.child == null) {
 				temp.child = new AclNode(c);
 				temp = temp.child;
 			} else if (temp.child.data == c) {
 				temp = temp.child;
 				continue;
-			} else {
+			} else if (temp.child.data == '*')
+				return;
+			else {
 				AclNode n = new AclNode(c);
 				temp.child.addToJunction(n);
 				temp = n;
@@ -72,15 +101,21 @@ public class HttpAccessController {
 		}
 	}
 
-	public static void removeFromAclList(String res) {
+	/**
+	 * Removes the given domain from the allowed domains list
+	 * 
+	 * @param domainName
+	 *            Domain to be removed
+	 */
+	public static void removeFromAclList(String domainName) {
 		if (root == null)
 			return;
 		AclNode temp = root;
-		int x = res.length() - 1;
+		int x = domainName.length() - 1;
 		AclNode lastJunction = null;
 		char lastChar = 0;
 		for (; x >= 0; x--) {
-			char c = res.charAt(x);
+			char c = domainName.charAt(x);
 			if (temp.isJunction) {
 				lastJunction = temp;
 				temp = temp.junction.get(c);
@@ -102,13 +137,13 @@ public class HttpAccessController {
 		}
 	}
 
-	private static boolean isInAclList(String res) {
+	private static boolean isInAclList(String domainName) {
 		if (root == null)
 			return false;
 		AclNode temp = root;
-		int x = res.length() - 1;
+		int x = domainName.length() - 1;
 		for (; x >= 0; x--) {
-			char c = res.charAt(x);
+			char c = domainName.charAt(x);
 			if (temp.isJunction)
 				temp = temp.junction.get(c);
 			if (temp == null)

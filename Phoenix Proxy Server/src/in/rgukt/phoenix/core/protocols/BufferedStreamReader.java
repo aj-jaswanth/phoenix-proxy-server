@@ -3,6 +3,11 @@ package in.rgukt.phoenix.core.protocols;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Reads data from a stream. Uses buffering to increase performance.
+ * 
+ * @author Venkata Jaswanth
+ */
 public final class BufferedStreamReader {
 
 	private InputStream inputStream;
@@ -17,6 +22,11 @@ public final class BufferedStreamReader {
 		this.capacity = bufferSize;
 	}
 
+	/**
+	 * Reads a single byte
+	 * 
+	 * @return byte read
+	 */
 	public byte read() throws IOException {
 		if (position == limit) {
 			limit = inputStream.read(buffer, 0, capacity);
@@ -27,6 +37,12 @@ public final class BufferedStreamReader {
 		return buffer[position++];
 	}
 
+	/**
+	 * Reads length bytes from the stream
+	 * 
+	 * @param length
+	 * @return data read
+	 */
 	public byte[] read(int length) throws IOException {
 		byte[] array = new byte[length];
 		if (position < limit) {
@@ -45,6 +61,13 @@ public final class BufferedStreamReader {
 		return array;
 	}
 
+	/**
+	 * Reads data from socket until length bytes are read.
+	 * 
+	 * @param array
+	 * @param offset
+	 * @param length
+	 */
 	public void readIteratively(byte[] array, int offset, int length)
 			throws IOException {
 		int bytesRead = 0;

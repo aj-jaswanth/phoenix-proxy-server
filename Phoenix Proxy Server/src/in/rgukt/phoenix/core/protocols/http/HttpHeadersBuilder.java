@@ -5,6 +5,11 @@ import in.rgukt.phoenix.core.Constants;
 
 import java.util.Map;
 
+/**
+ * Class to build HTTP headers from strings.
+ * 
+ * @author Venkata Jaswanth
+ */
 public final class HttpHeadersBuilder {
 	private ByteBuffer headerBuffer;
 	private byte[] delimiter = "\r\n".getBytes();
@@ -19,16 +24,31 @@ public final class HttpHeadersBuilder {
 		}
 	}
 
+	/**
+	 * Add the given header. Header format headerKey: headerValue
+	 * 
+	 * @param header
+	 */
 	public void addHeader(String header) {
 		headerBuffer.put(header.getBytes());
 		headerBuffer.put(delimiter);
 	}
 
+	/**
+	 * Add all headers in headers map
+	 * 
+	 * @param headersMap
+	 */
 	public void addAllHeaders(Map<String, String> headersMap) {
 		for (String header : headersMap.keySet())
 			addHeader(header + ": " + headersMap.get(header));
 	}
 
+	/**
+	 * Returns the final headers array
+	 * 
+	 * @return byte array
+	 */
 	public byte[] getByteArray() {
 		if (byteArray == null) {
 			headerBuffer.put(delimiter);

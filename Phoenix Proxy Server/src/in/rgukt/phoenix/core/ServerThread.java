@@ -6,14 +6,26 @@ import in.rgukt.phoenix.core.protocols.ProtocolSensor;
 import java.io.IOException;
 import java.net.Socket;
 
+/**
+ * Handles a client request.
+ * 
+ * @author Venkata Jaswanth
+ */
 public final class ServerThread implements Runnable {
 	private Socket clientSocket;
 	private ApplicationLayerProtocolProcessor applicationLayerRequestProcessor;
 
+	/**
+	 * @param client
+	 *            Client socket it needs to handle
+	 */
 	public ServerThread(Socket client) {
 		this.clientSocket = client;
 	}
 
+	/**
+	 * Starting point of client request handling.
+	 */
 	@Override
 	public void run() {
 		try {

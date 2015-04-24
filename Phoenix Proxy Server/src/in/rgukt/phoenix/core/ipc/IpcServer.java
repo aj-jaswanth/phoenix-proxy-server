@@ -11,9 +11,18 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
+/**
+ * This handles all Inter Process Communication between web server handling web
+ * interface part of the proxy server and the core proxy server software
+ * 
+ * @author Venkata Jaswanth
+ */
 public class IpcServer implements Runnable {
 	private static ServerSocket serverSocket;
 
+	/**
+	 * Starts the server and processes commands
+	 */
 	public static void listen() throws IOException {
 		serverSocket = new ServerSocket(Constants.IPCServer.port);
 		while (true) {
@@ -51,6 +60,9 @@ public class IpcServer implements Runnable {
 		case "U":
 			if (a[1].equals("CRD"))
 				Authenticator.updateUser(a[2], a[3]);
+			else if (a[1].equals("QTA"))
+				QuotaManager.updateQuotaLimit(a[2],
+						Configurator.parseDataSize(a[3]));
 			break;
 		}
 	}

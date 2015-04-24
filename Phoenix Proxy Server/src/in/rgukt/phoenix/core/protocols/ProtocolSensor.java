@@ -7,8 +7,19 @@ import in.rgukt.phoenix.core.protocols.http.HttpRequestProcessor;
 import java.io.IOException;
 import java.net.Socket;
 
+/**
+ * This class tries to find the application layer protocol the client is
+ * speaking.
+ * 
+ * @author Venkata Jaswanth
+ */
 public final class ProtocolSensor {
-
+	/**
+	 * Finds the application layer protocol by reading few bytes
+	 * 
+	 * @param clientSocket
+	 * @return application layer protocol
+	 */
 	public static ApplicationLayerProtocolProcessor sense(Socket clientSocket)
 			throws IOException {
 		ByteBuffer message = new ByteBuffer(
@@ -29,7 +40,7 @@ public final class ProtocolSensor {
 					state = 1;
 				else
 					// Almost confirm it is CONNECT. Tunneling proxy.
-					return null; // TODO:return HttpsProtocolRequest
+					return null;
 				break;
 			case 1:
 				if (b == 'E' || b == 'O' || b == 'P' || b == 'E' || b == 'R')

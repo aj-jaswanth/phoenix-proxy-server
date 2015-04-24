@@ -1,5 +1,10 @@
 package in.rgukt.phoenix.core.protocols.http;
 
+/**
+ * Class holds constants for HTTP response processing automata
+ * 
+ * @author Venkata Jaswanth
+ */
 public final class HttpResponseStates {
 	public static final int initialLine = 1;
 	public static final int headerLine = 2;

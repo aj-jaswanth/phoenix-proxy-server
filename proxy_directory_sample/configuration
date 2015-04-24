@@ -8,6 +8,9 @@ proxy_server_port 3128
 # port for IPC server
 ipc_server_port 9090
 
+# maximum number of concurrent threads
+max_concurrent_threads 4
+
 # log file path
 log_file /home/aj/.phoenix/logs/phoenix.log
 

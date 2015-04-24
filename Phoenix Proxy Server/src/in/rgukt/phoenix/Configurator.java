@@ -6,6 +6,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
+/**
+ * Reads the configuration file and updates the relevant details
+ * 
+ * @author Venkata Jaswanth
+ */
 public class Configurator {
 
 	public static void configureServer() {
@@ -60,6 +65,9 @@ public class Configurator {
 			case "ipc_server_port":
 				Constants.IPCServer.port = scanner.nextInt();
 				break;
+			case "max_concurrent_threads":
+				Constants.Server.maxConcurrentThreads = scanner.nextInt();
+				break;
 			default:
 				if (token.charAt(0) != '#') {
 					System.err.println("Invalid configuration line : " + token);
@@ -72,6 +80,13 @@ public class Configurator {
 		scanner.close();
 	}
 
+	/**
+	 * Parses time in hh:mm:ss format to milliseconds
+	 * 
+	 * @param time
+	 *            Time as hh:mm:ss string
+	 * @return number of milliseconds
+	 */
 	public static long parseTime(String time) {
 		int fistColon = time.indexOf(':');
 		int secondColon = time.indexOf(':', fistColon + 1);
@@ -83,6 +98,13 @@ public class Configurator {
 		return milliseconds;
 	}
 
+	/**
+	 * Parses data in general format like 10MB etc., to number of bytes
+	 * 
+	 * @param dataSize
+	 *            data as 10MB etc., in string format
+	 * @return number of bytes
+	 */
 	public static long parseDataSize(String dataSize) {
 		int len = dataSize.length();
 		long size = Integer.parseInt(dataSize.substring(0, len - 2));

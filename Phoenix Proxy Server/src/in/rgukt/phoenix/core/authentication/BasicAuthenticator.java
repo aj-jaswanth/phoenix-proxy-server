@@ -1,15 +1,27 @@
 package in.rgukt.phoenix.core.authentication;
 
-import in.rgukt.phoenix.core.authentication.decoders.Base64;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public final class BasicAuthenticator extends Authenticator {
+import javax.xml.bind.DatatypeConverter;
 
+/**
+ * Handles Base64 scheme of authentication
+ * 
+ * @author Venkata Jaswanth
+ */
+
+public final class BasicAuthenticator extends Authenticator {
+	/**
+	 * Check whether the authentication identifier is valid or not
+	 * 
+	 * @param str
+	 * @return true if valid else false
+	 */
 	public static String isValid(String str) {
 		String str2 = str.split(" ")[1];
-		String[] a = Base64.decode(str2).split(":");
+		String[] a = new String(DatatypeConverter.parseBase64Binary(str2))
+				.split(":");
 		if (a.length == 2) {
 			String s = FileAuthenticator.getPassword(a[0]);
 			String hashedPassword = null;

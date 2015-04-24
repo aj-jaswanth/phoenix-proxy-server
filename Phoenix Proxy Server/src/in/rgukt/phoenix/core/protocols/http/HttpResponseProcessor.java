@@ -14,6 +14,11 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.HashMap;
 
+/**
+ * This class processes the complete HTTP response
+ * 
+ * @author Venkata Jaswanth
+ */
 public final class HttpResponseProcessor extends
 		ApplicationLayerProtocolProcessor {
 	@SuppressWarnings("unused")
@@ -165,7 +170,7 @@ public final class HttpResponseProcessor extends
 				break;
 			case HttpResponseStates.lengthLineEnd:
 				clientOutputStream.write(body.getBuffer(), prevLengthMarker,
-						body.getPosition() - prevLengthMarker); // TODO: TCP!
+						body.getPosition() - prevLengthMarker);
 				int len = Integer.parseInt(length.toString().trim(), 16);
 				dataDownloaded += len;
 				length = new StringBuilder();
@@ -216,19 +221,16 @@ public final class HttpResponseProcessor extends
 
 	@Override
 	public String getServer() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public int getPort() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public String getResource() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }

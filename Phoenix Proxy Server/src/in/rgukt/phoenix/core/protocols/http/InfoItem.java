@@ -1,5 +1,10 @@
 package in.rgukt.phoenix.core.protocols.http;
 
+/**
+ * Holds the requested resource and user name
+ * 
+ * @author Venkata Jaswanth
+ */
 public class InfoItem {
 
 	String requestedResource;

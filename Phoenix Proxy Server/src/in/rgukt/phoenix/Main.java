@@ -14,9 +14,20 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Main class of the proxy server.
+ * 
+ * @author Venkata Jaswanth
+ */
 public class Main {
 	private static boolean stopServer = false;
 
+	/**
+	 * Starting point of the proxy server.
+	 * 
+	 * @param args
+	 *            takes the path of the home directory of the proxy server
+	 */
 	public static void main(String[] args) throws IOException,
 			InterruptedException, ExecutionException {
 		if (args.length == 1) {
@@ -29,7 +40,7 @@ public class Main {
 
 		ServerSocket serverSocket = new ServerSocket(Constants.Server.port);
 		initialize();
-		ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(4, 10,
+		ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(8, 10,
 				3, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 		while (!stopServer) {
 			Socket client = serverSocket.accept();
@@ -41,8 +52,6 @@ public class Main {
 	private static void initialize() throws IOException {
 		Constants.HttpProtocol.ErrorResponses.invalidProtocolHtml = FileHandler
 				.readAsBytes("html/InvalidProtocol.html");
-		Constants.HttpProtocol.ErrorResponses.homePageHtml = FileHandler
-				.readAsBytes("html/HomePage.html");
 		Constants.HttpProtocol.ErrorResponses.quotaExceededHtml = FileHandler
 				.readAsBytes("html/QuotaExceeded.html");
 		Constants.HttpProtocol.ErrorResponses.authenticationRequiredHtml = FileHandler

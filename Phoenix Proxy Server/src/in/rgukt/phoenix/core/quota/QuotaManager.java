@@ -14,6 +14,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+/**
+ * Handles all quota management of users
+ * 
+ * @author Venkata Jaswanth
+ */
 public class QuotaManager {
 
 	private static Map<String, Long> quotaMap = new HashMap<String, Long>();
@@ -47,11 +52,25 @@ public class QuotaManager {
 		}
 	}
 
+	/**
+	 * Returns whether the current length data if downloaded exceeds quota or
+	 * not
+	 * 
+	 * @param userName
+	 * @param len
+	 * @return true if quota exceeds else false
+	 */
 	public synchronized static boolean exceedsQuotaLimit(String userName,
 			long len) {
 		return quotaMap.get(userName) > quotaLimits.get(userName);
 	}
 
+	/**
+	 * Returns whether the user has exceeded his quota or not
+	 * 
+	 * @param userName
+	 * @return true if quota exceeded else false
+	 */
 	public synchronized static boolean isQuotaExceeded(String userName) {
 		Long quota = quotaMap.get(userName);
 		if (quota != null) {
@@ -64,12 +83,33 @@ public class QuotaManager {
 		return false;
 	}
 
+	/**
+	 * Adds quota limit to user
+	 * 
+	 * @param userName
+	 * @param limit
+	 */
 	public static void addQuotaLimit(String userName, long limit) {
 		quotaLimits.put(userName, limit);
 	}
 
+	/**
+	 * Removes quota limit to user
+	 * 
+	 * @param userName
+	 */
 	public static void removeQuotaLimit(String userName) {
 		quotaLimits.remove(userName);
+	}
+
+	/**
+	 * Updates quota limit of user
+	 * 
+	 * @param userName
+	 * @param limit
+	 */
+	public static void updateQuotaLimit(String userName, long limit) {
+		quotaLimits.put(userName, limit);
 	}
 
 	private static void dumpQuotaToFile() throws IOException {
@@ -96,6 +136,12 @@ public class QuotaManager {
 		scanner.close();
 	}
 
+	/**
+	 * Adds number of bytes to the user's quota
+	 * 
+	 * @param userName
+	 * @param dataUsedNow
+	 */
 	public synchronized static void addQuota(String userName, long dataUsedNow) {
 		Long dataAlreadyUsed = quotaMap.get(userName);
 		if (dataAlreadyUsed == null)

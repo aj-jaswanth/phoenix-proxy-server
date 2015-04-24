@@ -8,11 +8,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+/**
+ * This class manages the cache
+ */
 public final class CacheManager {
 	private static Map<String, CacheItem> mainCache = new HashMap<String, CacheItem>();
 	private static long cacheSize;
 	private static long startTime = System.currentTimeMillis();
 
+	/**
+	 * Return the cache item that holds the resource.
+	 * 
+	 * @param resource
+	 * @return cache item
+	 */
 	public synchronized static CacheItem getFromCache(String resource) {
 		CacheItem cacheItem = mainCache.get(resource);
 		if (cacheItem != null) {
@@ -33,6 +42,14 @@ public final class CacheManager {
 		return cacheItem;
 	}
 
+	/**
+	 * It determines whether the request can be cached or not and it caches it
+	 * according to its criteria
+	 * 
+	 * @param resource
+	 * @param headersMap
+	 * @param body
+	 */
 	public static void inspect(String resource, Map<String, String> headersMap,
 			ByteBuffer body) {
 		if (headersMap.containsKey("ETag"))
@@ -76,6 +93,9 @@ public final class CacheManager {
 			cleanUpCache();
 	}
 
+	/**
+	 * Least Recently Used algorithm based cache cleaning
+	 */
 	private static void cleanUpCache() {
 		ArrayList<Entry<String, CacheItem>> keys = new ArrayList<Entry<String, CacheItem>>();
 		long prevSize = cacheSize, cacheLimit = (long) (Constants.HttpProtocol.maxCacheSize * 0.8);

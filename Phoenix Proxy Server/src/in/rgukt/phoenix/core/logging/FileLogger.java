@@ -8,6 +8,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
 
+/**
+ * Handles all logging of requests to files and rotates them based on file size
+ * 
+ * @author Venkata Jaswanth
+ */
 public class FileLogger {
 
 	private static BufferedWriter bufferedWriter;
@@ -17,6 +22,15 @@ public class FileLogger {
 		createNewFile(Constants.Server.logFile);
 	}
 
+	/**
+	 * Logs the request
+	 * 
+	 * @param userName
+	 * @param url
+	 * @param cacheHit
+	 * @param dataUploaded
+	 * @param dataDownloaded
+	 */
 	public static void logRequest(String userName, String url,
 			boolean cacheHit, long dataUploaded, long dataDownloaded) {
 		if (file.length() > Constants.Server.maxLogFileRotateSize) {

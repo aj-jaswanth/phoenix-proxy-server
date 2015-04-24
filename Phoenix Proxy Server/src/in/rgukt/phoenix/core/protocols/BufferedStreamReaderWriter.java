@@ -5,6 +5,11 @@ import in.rgukt.phoenix.core.Constants;
 import java.io.IOException;
 import java.io.OutputStream;
 
+/**
+ * Reads and writes data simultaneously in chunks.
+ * 
+ * @author Venkata Jaswanth
+ */
 public final class BufferedStreamReaderWriter {
 
 	private OutputStream outputStream;
@@ -16,6 +21,12 @@ public final class BufferedStreamReaderWriter {
 		this.bufferedStreamReader = bufferedStreamReader;
 	}
 
+	/**
+	 * Returns the data sent after completion
+	 * 
+	 * @param length
+	 * @return data sent
+	 */
 	public byte[] readWrite(int length) throws IOException {
 		byte[] array = new byte[length], temp;
 		int bytesRead = 0;
@@ -36,6 +47,11 @@ public final class BufferedStreamReaderWriter {
 		return array;
 	}
 
+	/**
+	 * Doesn't return data after completion
+	 * 
+	 * @param length
+	 */
 	public void readWriteNoReturn(int length) throws IOException {
 		int bytesToRead = Constants.HttpProtocol.streamBufferSize;
 		byte[] temp;

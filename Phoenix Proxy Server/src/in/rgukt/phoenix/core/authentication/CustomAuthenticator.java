@@ -2,8 +2,19 @@ package in.rgukt.phoenix.core.authentication;
 
 import javax.xml.bind.DatatypeConverter;
 
+/**
+ * Handles custom authentication scheme used by a client software.
+ * 
+ * @author Venkata Jaswanth
+ *
+ */
 public class CustomAuthenticator extends Authenticator {
-
+	/**
+	 * Check whether the authentication identifer is valid or not
+	 * 
+	 * @param str
+	 * @return true if valid else false
+	 */
 	public static String isValid(String str) {
 		String payload = str.split(" ")[1];
 		payload = new String(DatatypeConverter.parseBase64Binary(payload));

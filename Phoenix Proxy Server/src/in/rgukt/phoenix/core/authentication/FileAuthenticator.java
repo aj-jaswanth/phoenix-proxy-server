@@ -8,6 +8,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+/**
+ * Maintains list of users and their passwords
+ * 
+ * @author Venkata Jaswanth
+ */
 public class FileAuthenticator {
 
 	private static Map<String, String> credentialsMap = new HashMap<String, String>();
@@ -28,8 +33,15 @@ public class FileAuthenticator {
 		credentialsMap.put(userName, passwordHash);
 	}
 
-	public static String getPassword(String string) {
-		return credentialsMap.get(string);
+	/**
+	 * Get the password of the given user
+	 * 
+	 * @param userName
+	 *            userName
+	 * @return password
+	 */
+	public static String getPassword(String userName) {
+		return credentialsMap.get(userName);
 	}
 
 	private static void updateCredentials() throws FileNotFoundException {
