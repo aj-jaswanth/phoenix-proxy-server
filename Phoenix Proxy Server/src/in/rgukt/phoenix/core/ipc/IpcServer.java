@@ -2,8 +2,9 @@ package in.rgukt.phoenix.core.ipc;
 
 import in.rgukt.phoenix.Configurator;
 import in.rgukt.phoenix.core.Constants;
-import in.rgukt.phoenix.core.access.HttpAccessController;
+import in.rgukt.phoenix.core.access.MainAccessController;
 import in.rgukt.phoenix.core.authentication.Authenticator;
+import in.rgukt.phoenix.core.authentication.RoleManager;
 import in.rgukt.phoenix.core.quota.QuotaManager;
 
 import java.io.IOException;
@@ -41,19 +42,22 @@ public class IpcServer implements Runnable {
 		String[] a = cmd.split(":");
 		switch (a[0]) {
 		case "A":
-			if (a[1].equals("CRD"))
-				Authenticator.addUser(a[2], a[3]);
-			else if (a[1].equals("ACL"))
-				HttpAccessController.addToAclList(a[2]);
+			if (a[1].equals("CRD")) {
+				Authenticator.addUser(a[2], a[4]);
+				RoleManager.addRole(a[2], Integer.parseInt(a[3]));
+			} else if (a[1].equals("ACL"))
+				MainAccessController.addToAcl(Integer.parseInt(a[2]), a[3]);
 			else if (a[1].equals("QTA"))
 				QuotaManager.addQuotaLimit(a[2],
 						Configurator.parseDataSize((a[3])));
 			break;
 		case "R":
-			if (a[1].equals("CRD"))
+			if (a[1].equals("CRD")) {
 				Authenticator.removeUser(a[2]);
-			else if (a[1].equals("ACL"))
-				HttpAccessController.removeFromAclList(a[2]);
+				RoleManager.removeRole(a[2]);
+			} else if (a[1].equals("ACL"))
+				MainAccessController
+						.removeFromAcl(Integer.parseInt(a[2]), a[3]);
 			else if (a[1].equals("QTA"))
 				QuotaManager.removeQuotaLimit(a[2]);
 			break;

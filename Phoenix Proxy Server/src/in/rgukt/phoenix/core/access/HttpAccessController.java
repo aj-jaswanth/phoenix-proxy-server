@@ -18,9 +18,11 @@ import java.util.Scanner;
 
 public class HttpAccessController {
 
-	private static AclNode root;
+	private AclNode root;
+	private int role;
 
-	static {
+	public HttpAccessController(int role) {
+		this.role = role;
 		try {
 			updateAclList();
 		} catch (FileNotFoundException e) {
@@ -37,17 +39,16 @@ public class HttpAccessController {
 	 * @param requestedResource
 	 * @return true if allowed or false if denied
 	 */
-	public static boolean isAllowed(String clientAddress, String server,
-			int port, String requestedResource) {
+	public boolean isAllowed(String clientAddress, String server, int port,
+			String requestedResource) {
 		if (port != 80)
 			return false;
 		return isInAclList(server);
 	}
 
-	private synchronized static void updateAclList()
-			throws FileNotFoundException {
+	private synchronized void updateAclList() throws FileNotFoundException {
 		root = null;
-		File aclFile = new File(Constants.HttpProtocol.aclFile);
+		File aclFile = new File(Constants.HttpProtocol.aclFile + "_" + role);
 		Scanner scanner = new Scanner(aclFile);
 		while (scanner.hasNext())
 			addToAclList(scanner.next());
@@ -60,7 +61,7 @@ public class HttpAccessController {
 	 * @param domainName
 	 *            domain name
 	 */
-	public static void addToAclList(String domainName) {
+	public void addToAclList(String domainName) {
 		int x = domainName.length() - 1;
 		AclNode temp;
 		if (root == null) {
@@ -107,7 +108,7 @@ public class HttpAccessController {
 	 * @param domainName
 	 *            Domain to be removed
 	 */
-	public static void removeFromAclList(String domainName) {
+	public void removeFromAclList(String domainName) {
 		if (root == null)
 			return;
 		AclNode temp = root;
@@ -137,7 +138,7 @@ public class HttpAccessController {
 		}
 	}
 
-	private static boolean isInAclList(String domainName) {
+	private boolean isInAclList(String domainName) {
 		if (root == null)
 			return false;
 		AclNode temp = root;

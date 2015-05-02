@@ -35,7 +35,6 @@ public final class HttpResponseProcessor extends
 	private String requestedResource;
 	private String userName;
 	private long dataDownloaded = 0;
-	private HttpErrorHandler httpErrorHandler = new HttpErrorHandler();
 
 	public HttpResponseProcessor(InfoItem info, Socket clientSocket,
 			Socket serverSocket) throws IOException {
@@ -116,7 +115,7 @@ public final class HttpResponseProcessor extends
 				} else {
 					int len = Integer.parseInt(lengthHeaderValue);
 					if (QuotaManager.exceedsQuotaLimit(userName, len)) {
-						httpErrorHandler.sendQuotaExceeded(clientOutputStream);
+						HttpErrorHandler.sendQuotaExceeded(clientOutputStream);
 						return 0;
 					}
 					clientOutputStream.write(headers.getBuffer(), 0,

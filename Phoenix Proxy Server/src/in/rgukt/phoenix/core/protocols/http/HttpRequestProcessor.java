@@ -2,8 +2,9 @@ package in.rgukt.phoenix.core.protocols.http;
 
 import in.rgukt.phoenix.core.ByteBuffer;
 import in.rgukt.phoenix.core.Constants;
-import in.rgukt.phoenix.core.access.HttpAccessController;
+import in.rgukt.phoenix.core.access.MainAccessController;
 import in.rgukt.phoenix.core.authentication.Authenticator;
+import in.rgukt.phoenix.core.authentication.RoleManager;
 import in.rgukt.phoenix.core.caching.CacheItem;
 import in.rgukt.phoenix.core.caching.CacheManager;
 import in.rgukt.phoenix.core.logging.FileLogger;
@@ -36,7 +37,6 @@ public final class HttpRequestProcessor extends
 	private HashMap<String, String> headersMap = new HashMap<String, String>();
 	private String[] initialLineArray;
 	private String[] serverAddress;
-	private HttpErrorHandler httpErrorHandler = new HttpErrorHandler();
 	private String clientAddress;
 	private long dataUploaded = 0, dataDownloaded = 0;
 	private String requestedResource;
@@ -104,14 +104,15 @@ public final class HttpRequestProcessor extends
 				boolean cacheHit = false;
 				if (userName != null) {
 					if (QuotaManager.isQuotaExceeded(userName)) {
-						httpErrorHandler.sendQuotaExceeded(clientOutputStream);
+						HttpErrorHandler.sendQuotaExceeded(clientOutputStream);
 						clientSocket.close();
 						return 0;
 					}
 					requestedResource = removePreceedingHostData(initialLineArray[1]);
-					if (HttpAccessController.isAllowed(clientAddress,
+					if (MainAccessController.isAllowed(
+							RoleManager.getRole(userName), clientAddress,
 							getServer(), getPort(), requestedResource) == false) {
-						httpErrorHandler.sendAccessDenied(clientOutputStream);
+						HttpErrorHandler.sendAccessDenied(clientOutputStream);
 						clientSocket.close();
 						return 0;
 					}
@@ -170,7 +171,7 @@ public final class HttpRequestProcessor extends
 						serverSocket.close();
 					}
 				} else
-					httpErrorHandler
+					HttpErrorHandler
 							.sendAuthenticationRequired(clientOutputStream);
 				clientSocket.close();
 				QuotaManager.addQuota(userName, dataUploaded + dataDownloaded);
@@ -300,7 +301,7 @@ public final class HttpRequestProcessor extends
 			serverSocket = new Socket(getServer(), getPort());
 			serverOutputStream = serverSocket.getOutputStream();
 		} catch (UnknownHostException e) {
-			httpErrorHandler.sendUnknownHostError(clientOutputStream,
+			HttpErrorHandler.sendUnknownHostError(clientOutputStream,
 					getServer());
 			return false;
 		}

@@ -11,27 +11,27 @@ import java.io.OutputStream;
  * @author Venkata Jaswanth
  */
 public final class HttpErrorHandler {
-	private byte[] invalidProtocolHeaders;
-	private byte[] quotaExceededHeaders;
-	private byte[] authenticationHeaders;
-	private byte[] accessDeniedHeaders;
+	private static byte[] invalidProtocolHeadersArray;
+	private static byte[] quotaExceededHeadersArray;
+	private static byte[] authenticationHeadersArray;
+	private static byte[] accessDeniedHeadersArray;
 
 	/**
 	 * Sends invalid protocol error
 	 * 
 	 * @param outputStream
 	 */
-	public void sendInvalidProtocolError(OutputStream outputStream)
+	public static void sendInvalidProtocolError(OutputStream outputStream)
 			throws IOException {
-		if (invalidProtocolHeaders == null) {
+		if (invalidProtocolHeadersArray == null) {
 			HttpHeadersBuilder invalidProtocolHeaders = new HttpHeadersBuilder(
 					Constants.HttpProtocol.defaultAcceptHeaders);
 			invalidProtocolHeaders
 					.addHeader("Content-Length: "
 							+ Constants.HttpProtocol.ErrorResponses.invalidProtocolHtml.length);
-			this.invalidProtocolHeaders = invalidProtocolHeaders.getByteArray();
+			invalidProtocolHeadersArray = invalidProtocolHeaders.getByteArray();
 		}
-		outputStream.write(invalidProtocolHeaders);
+		outputStream.write(invalidProtocolHeadersArray);
 		outputStream
 				.write(Constants.HttpProtocol.ErrorResponses.invalidProtocolHtml);
 	}
@@ -42,8 +42,8 @@ public final class HttpErrorHandler {
 	 * @param outputStream
 	 * @param host
 	 */
-	public void sendUnknownHostError(OutputStream outputStream, String host)
-			throws IOException {
+	public static void sendUnknownHostError(OutputStream outputStream,
+			String host) throws IOException {
 		HttpHeadersBuilder unknownHostHeaders = new HttpHeadersBuilder(
 				Constants.HttpProtocol.defaultAcceptHeaders);
 		String unknownHostHtmlString = "<!DOCTYPE html>" + "<html>" + "<head>"
@@ -63,16 +63,17 @@ public final class HttpErrorHandler {
 	 * 
 	 * @param outputStream
 	 */
-	public void sendQuotaExceeded(OutputStream outputStream) throws IOException {
-		if (quotaExceededHeaders == null) {
+	public static void sendQuotaExceeded(OutputStream outputStream)
+			throws IOException {
+		if (quotaExceededHeadersArray == null) {
 			HttpHeadersBuilder quotaExceededHeaders = new HttpHeadersBuilder(
 					Constants.HttpProtocol.defaultAcceptHeaders);
 			quotaExceededHeaders
 					.addHeader("Content-Length: "
 							+ Constants.HttpProtocol.ErrorResponses.quotaExceededHtml.length);
-			this.quotaExceededHeaders = quotaExceededHeaders.getByteArray();
+			quotaExceededHeadersArray = quotaExceededHeaders.getByteArray();
 		}
-		outputStream.write(quotaExceededHeaders);
+		outputStream.write(quotaExceededHeadersArray);
 		outputStream
 				.write(Constants.HttpProtocol.ErrorResponses.quotaExceededHtml);
 	}
@@ -83,17 +84,17 @@ public final class HttpErrorHandler {
 	 * @param outputStream
 	 * @throws IOException
 	 */
-	public void sendAuthenticationRequired(OutputStream outputStream)
+	public static void sendAuthenticationRequired(OutputStream outputStream)
 			throws IOException {
-		if (authenticationHeaders == null) {
+		if (authenticationHeadersArray == null) {
 			HttpHeadersBuilder authenticationHeaders = new HttpHeadersBuilder(
 					Constants.HttpProtocol.defaultAuthenticationHeaders);
 			authenticationHeaders
 					.addHeader("Content-Length: "
 							+ Constants.HttpProtocol.ErrorResponses.authenticationRequiredHtml.length);
-			this.authenticationHeaders = authenticationHeaders.getByteArray();
+			authenticationHeadersArray = authenticationHeaders.getByteArray();
 		}
-		outputStream.write(authenticationHeaders);
+		outputStream.write(authenticationHeadersArray);
 		outputStream
 				.write(Constants.HttpProtocol.ErrorResponses.authenticationRequiredHtml);
 	}
@@ -103,16 +104,17 @@ public final class HttpErrorHandler {
 	 * 
 	 * @param outputStream
 	 */
-	public void sendAccessDenied(OutputStream outputStream) throws IOException {
-		if (accessDeniedHeaders == null) {
+	public static void sendAccessDenied(OutputStream outputStream)
+			throws IOException {
+		if (accessDeniedHeadersArray == null) {
 			HttpHeadersBuilder accessDeniedHeaders = new HttpHeadersBuilder(
 					Constants.HttpProtocol.defaultAcceptHeaders);
 			accessDeniedHeaders
 					.addHeader("Content-Length: "
 							+ Constants.HttpProtocol.ErrorResponses.accessDeniedHtml.length);
-			this.accessDeniedHeaders = accessDeniedHeaders.getByteArray();
+			accessDeniedHeadersArray = accessDeniedHeaders.getByteArray();
 		}
-		outputStream.write(accessDeniedHeaders);
+		outputStream.write(accessDeniedHeadersArray);
 		outputStream
 				.write(Constants.HttpProtocol.ErrorResponses.accessDeniedHtml);
 	}

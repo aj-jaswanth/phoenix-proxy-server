@@ -68,6 +68,9 @@ public class Configurator {
 			case "max_concurrent_threads":
 				Constants.Server.maxConcurrentThreads = scanner.nextInt();
 				break;
+			case "number_of_roles":
+				Constants.Server.numberOfRoles = scanner.nextInt();
+				break;
 			default:
 				if (token.charAt(0) != '#') {
 					System.err.println("Invalid configuration line : " + token);

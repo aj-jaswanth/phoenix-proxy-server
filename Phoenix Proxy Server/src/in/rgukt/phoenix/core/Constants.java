@@ -32,6 +32,7 @@ public final class Constants {
 		public static final String name = "Phoenix Proxy Server";
 		public static int port = 3128;
 		public static int maxConcurrentThreads = 4;
+		public static int numberOfRoles = 1;
 		public static long quotaDumpInterval = 5 * 60 * 1000;
 		public static String quotaResetPoint = "00:00";
 		public static String quotasDir = prefix + "/quotas/";
@@ -48,6 +49,7 @@ public final class Constants {
 	 * This class holds all configuration of HTTP Protocol.
 	 */
 	public static final class HttpProtocol {
+
 		/**
 		 * Holds all error responses HTML documents.
 		 */

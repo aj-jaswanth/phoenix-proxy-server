@@ -49,7 +49,11 @@ public class FileAuthenticator {
 		Scanner scanner = new Scanner(
 				new File(Constants.Server.credentialsFile));
 		while (scanner.hasNext()) {
-			credentialsMap.put(scanner.next(), scanner.next());
+			String userName = scanner.next();
+			int role = scanner.nextInt();
+			String password = scanner.next();
+			credentialsMap.put(userName, password);
+			RoleManager.addRole(userName, role);
 		}
 		scanner.close();
 	}
