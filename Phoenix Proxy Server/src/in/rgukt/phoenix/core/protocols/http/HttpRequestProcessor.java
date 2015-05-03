@@ -175,8 +175,9 @@ public final class HttpRequestProcessor extends
 							.sendAuthenticationRequired(clientOutputStream);
 				clientSocket.close();
 				QuotaManager.addQuota(userName, dataUploaded + dataDownloaded);
-				FileLogger.logRequest(userName, initialLineArray[1], cacheHit,
-						dataUploaded, dataDownloaded);
+				FileLogger.logRequest(userName, clientAddress,
+						initialLineArray[1], cacheHit, dataUploaded,
+						dataDownloaded);
 				return dataUploaded;
 			}
 		}

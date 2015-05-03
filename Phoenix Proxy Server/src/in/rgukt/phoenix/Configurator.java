@@ -71,6 +71,9 @@ public class Configurator {
 			case "number_of_roles":
 				Constants.Server.numberOfRoles = scanner.nextInt();
 				break;
+			case "enable_ipc_server":
+				Constants.IPCServer.enabled = scanner.nextBoolean();
+				break;
 			default:
 				if (token.charAt(0) != '#') {
 					System.err.println("Invalid configuration line : " + token);

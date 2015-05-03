@@ -31,8 +31,8 @@ public class FileLogger {
 	 * @param dataUploaded
 	 * @param dataDownloaded
 	 */
-	public static void logRequest(String userName, String url,
-			boolean cacheHit, long dataUploaded, long dataDownloaded) {
+	public static void logRequest(String userName, String clientAddress,
+			String url, boolean cacheHit, long dataUploaded, long dataDownloaded) {
 		if (file.length() > Constants.Server.maxLogFileRotateSize) {
 			File rFile = file;
 			while (rFile.exists())
@@ -44,6 +44,8 @@ public class FileLogger {
 		buffer.append(new Timestamp(System.currentTimeMillis()));
 		buffer.append(',');
 		buffer.append(userName);
+		buffer.append(',');
+		buffer.append(clientAddress);
 		buffer.append(',');
 		buffer.append(url);
 		buffer.append(',');

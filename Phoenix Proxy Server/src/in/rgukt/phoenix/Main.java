@@ -34,10 +34,10 @@ public class Main {
 			Constants.prefix = args[0] + File.separator;
 			Configurator.configureServer();
 		}
-
-		Thread IpcThread = new Thread(new IpcServer());
-		IpcThread.start();
-
+		if (Constants.IPCServer.enabled) {
+			Thread IpcThread = new Thread(new IpcServer());
+			IpcThread.start();
+		}
 		ServerSocket serverSocket = new ServerSocket(Constants.Server.port);
 		initialize();
 		ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(8, 10,

@@ -19,6 +19,7 @@ public final class Constants {
 	 * @author Venkata Jaswanth
 	 */
 	public static final class IPCServer {
+		public static boolean enabled = false;
 		public static int port = 9090;
 	}
 

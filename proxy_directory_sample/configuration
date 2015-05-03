@@ -8,6 +8,12 @@ proxy_server_port 3128
 # port for IPC server
 ipc_server_port 9090
 
+# enable IPC server
+enable_ipc_server true
+
+# number of roles
+number_of_roles 2
+
 # maximum number of concurrent threads
 max_concurrent_threads 4
 
