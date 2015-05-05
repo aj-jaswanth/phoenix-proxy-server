@@ -22,7 +22,7 @@ public class CustomAuthenticator extends Authenticator {
 		String userName = array[0];
 		String receivedHash = array[1];
 		String passwordHash = FileAuthenticator.getPassword(userName);
-		if (passwordHash.equals(receivedHash)) {
+		if (passwordHash != null && passwordHash.equals(receivedHash)) {
 			addToAuthenticationCache(str, userName);
 			return userName;
 		}

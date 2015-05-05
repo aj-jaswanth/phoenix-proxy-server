@@ -8,10 +8,10 @@ import in.rgukt.phoenix.core.Constants;
  * @author Venkata Jaswanth
  */
 public class MainAccessController {
-	private static HttpAccessController[] accessControl = new HttpAccessController[Constants.Server.numberOfRoles];
+	private static HttpAccessController[] accessControl = new HttpAccessController[Constants.Server.numberOfRoles + 1];
 
 	static {
-		for (int x = 0; x < accessControl.length; x++)
+		for (int x = 1; x < accessControl.length; x++)
 			accessControl[x] = new HttpAccessController(x);
 	}
 

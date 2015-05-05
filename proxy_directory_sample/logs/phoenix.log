@@ -1,8 +1,8 @@
-2015-05-03 22:04:06.005,null,127.0.0.1,http://localhost/xampp/,0,0,0
-2015-05-03 22:04:06.236,null,127.0.0.1,http://self-repair.mozilla.org/en-US/repair,0,0,0
-2015-05-03 22:04:08.113,aj,127.0.0.1,http://localhost/xampp/,0,342,860
-2015-05-03 22:04:08.19,aj,127.0.0.1,http://localhost/xampp/head.php,0,384,1608
-2015-05-03 22:04:08.192,aj,127.0.0.1,http://localhost/xampp/navi.php,0,384,2660
-2015-05-03 22:04:08.195,aj,127.0.0.1,http://localhost/xampp/start.php,0,385,1776
-2015-05-03 22:04:08.389,aj,127.0.0.1,http://localhost/favicon.ico,0,347,1671
-2015-05-03 22:04:49.191,aj,127.0.0.1,http://localhost/xampp/img/head-linux.gif,0,403,1343
+2015-05-03 22:04:06.005,user,127.0.0.1,http://localhost/xampp/,0,0,0
+2015-05-03 22:04:06.236,user,127.0.0.1,http://self-repair.mozilla.org/en-US/repair,0,0,0
+2015-05-03 22:04:08.113,user,127.0.0.1,http://localhost/xampp/,0,342,860
+2015-05-03 22:04:08.19,user,127.0.0.1,http://localhost/xampp/head.php,0,384,1608
+2015-05-03 22:04:08.192,user,127.0.0.1,http://localhost/xampp/navi.php,0,384,2660
+2015-05-03 22:04:08.195,user,127.0.0.1,http://localhost/xampp/start.php,0,385,1776
+2015-05-03 22:04:08.389,user,127.0.0.1,http://localhost/favicon.ico,0,347,1671
+2015-05-03 22:04:49.191,user,127.0.0.1,http://localhost/xampp/img/head-linux.gif,0,403,1343

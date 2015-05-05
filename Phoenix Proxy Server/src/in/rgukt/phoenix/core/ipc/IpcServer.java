@@ -62,9 +62,10 @@ public class IpcServer implements Runnable {
 				QuotaManager.removeQuotaLimit(a[2]);
 			break;
 		case "U":
-			if (a[1].equals("CRD"))
-				Authenticator.updateUser(a[2], a[3]);
-			else if (a[1].equals("QTA"))
+			if (a[1].equals("CRD")) {
+				Authenticator.updateUser(a[2], a[4]);
+				RoleManager.addRole(a[2], Integer.parseInt(a[3]));
+			} else if (a[1].equals("QTA"))
 				QuotaManager.updateQuotaLimit(a[2],
 						Configurator.parseDataSize(a[3]));
 			break;

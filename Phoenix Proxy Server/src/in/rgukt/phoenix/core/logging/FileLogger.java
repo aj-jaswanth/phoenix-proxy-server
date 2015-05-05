@@ -33,6 +33,8 @@ public class FileLogger {
 	 */
 	public static void logRequest(String userName, String clientAddress,
 			String url, boolean cacheHit, long dataUploaded, long dataDownloaded) {
+		if (file.exists() == false)
+			createNewFile(Constants.Server.logFile);
 		if (file.length() > Constants.Server.maxLogFileRotateSize) {
 			File rFile = file;
 			while (rFile.exists())

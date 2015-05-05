@@ -12,7 +12,7 @@ ipc_server_port 9090
 enable_ipc_server true
 
 # number of roles
-number_of_roles 2
+number_of_roles 3
 
 # maximum number of concurrent threads
 max_concurrent_threads 4
