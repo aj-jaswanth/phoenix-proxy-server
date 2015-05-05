@@ -170,14 +170,15 @@ public final class HttpRequestProcessor extends
 								.processCompleteMessage();
 						serverSocket.close();
 					}
+					QuotaManager.addQuota(userName, dataUploaded
+							+ dataDownloaded);
+					FileLogger.logRequest(userName, clientAddress,
+							initialLineArray[1], cacheHit, dataUploaded,
+							dataDownloaded);
 				} else
 					HttpErrorHandler
 							.sendAuthenticationRequired(clientOutputStream);
 				clientSocket.close();
-				QuotaManager.addQuota(userName, dataUploaded + dataDownloaded);
-				FileLogger.logRequest(userName, clientAddress,
-						initialLineArray[1], cacheHit, dataUploaded,
-						dataDownloaded);
 				return dataUploaded;
 			}
 		}
